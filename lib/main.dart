@@ -8,6 +8,15 @@ const iituRed = Color(0xFFC8102E);
 const iituDark = Color(0xFF171717);
 const pageBg = Color(0xFFF5F5F3);
 
+class AppRoutes {
+  static const home = '/';
+  static const timetable = '/timetable';
+  static const services = '/services';
+  static const events = '/events';
+  static const profile = '/profile';
+  static const serviceDetail = '/service-detail';
+}
+
 class MyCampusApp extends StatelessWidget {
   const MyCampusApp({super.key});
 
@@ -22,7 +31,29 @@ class MyCampusApp extends StatelessWidget {
         colorScheme: ColorScheme.fromSeed(seedColor: iituRed),
         fontFamily: 'Arial',
       ),
-      home: const CampusHomePage(),
+      initialRoute: AppRoutes.home,
+      routes: {
+        AppRoutes.home: (context) => const CampusHomePage(),
+        AppRoutes.timetable: (context) => const TimetableScreen(),
+        AppRoutes.services: (context) => const CampusServicesScreen(),
+        AppRoutes.events: (context) => const CampusEventsScreen(),
+        AppRoutes.profile: (context) => const StudentProfileScreen(),
+        AppRoutes.serviceDetail: (context) {
+          final service =
+          ModalRoute.of(context)!.settings.arguments as CampusService;
+
+          return ServiceDetailScreen(service: service);
+        },
+      },
+      // Handles invalid route names and prevents navigation errors.
+      onUnknownRoute: (settings) {
+        return MaterialPageRoute(
+          builder: (context) => UnknownRouteScreen(
+            routeName: settings.name ?? 'Unknown',
+          ),
+        );
+      },
+
     );
   }
 }
@@ -55,6 +86,7 @@ class _CampusHomePageState extends State<CampusHomePage> {
   }
 
   void _openPage(String title, Widget child) {
+    // Direct route using MaterialPageRoute for simple information pages.
     Navigator.push(
       context,
       MaterialPageRoute(
@@ -108,7 +140,13 @@ class _CampusHomePageState extends State<CampusHomePage> {
       bottomNavigationBar: NavigationBar(
         selectedIndex: _currentIndex,
         indicatorColor: const Color(0xFFFFDDE3),
-        onDestinationSelected: _changePage,
+        onDestinationSelected: (index) {
+          if (index == 2) {
+            Navigator.pushNamed(context, AppRoutes.profile);
+          } else {
+            _changePage(index);
+          }
+        },
         destinations: const [
           NavigationDestination(
             icon: Icon(Icons.home_outlined),
@@ -342,18 +380,19 @@ class _CampusHomePageState extends State<CampusHomePage> {
 
   Widget _servicesGrid() {
     final items = [
+      // Opens the timetable using a named route.
       ('01', 'Schedule', Icons.calendar_month_outlined,
-          () => _changePage(1)),
+          () => Navigator.pushNamed(context, AppRoutes.timetable)),
       ('02', 'Faculties', Icons.school_outlined,
           () => _openPage('FACULTIES', _facultiesContent())),
       ('03', 'Student Clubs', Icons.groups_outlined,
           () => _openPage('STUDENT CLUBS', _clubsContent())),
-      ('04', 'Campus', Icons.location_on_outlined,
-          () => _openPage('CAMPUS', _campusContent())),
+      ('04', 'Campus Services', Icons.support_agent_outlined,
+          () => Navigator.pushNamed(context, AppRoutes.services)),
       ('05', 'Contacts', Icons.phone_outlined,
           () => _openPage('CONTACTS', _contactsContent())),
-      ('06', 'Notices', Icons.campaign_outlined,
-          () => _openPage('NOTICES', _noticesContent())),
+      ('06', 'Campus Events', Icons.event_outlined,
+          () => Navigator.pushNamed(context, AppRoutes.events)),
     ];
 
     return LayoutBuilder(
@@ -904,7 +943,978 @@ class _CampusHomePageState extends State<CampusHomePage> {
     );
   }
 }
+// Timetable is a separate route opened through Navigator.
+class TimetableScreen extends StatelessWidget {
+  const TimetableScreen({super.key});
 
+  @override
+  Widget build(BuildContext context) {
+    return Scaffold(
+      backgroundColor: pageBg,
+      appBar: AppBar(
+        backgroundColor: iituRed,
+        foregroundColor: Colors.white,
+        title: const Text(
+          'MY SCHEDULE',
+          style: TextStyle(
+            fontSize: 15,
+            fontWeight: FontWeight.w900,
+            letterSpacing: 1.2,
+          ),
+        ),
+      ),
+      body: SingleChildScrollView(
+        padding: const EdgeInsets.fromLTRB(20, 24, 20, 60),
+        child: Center(
+          child: ConstrainedBox(
+            constraints: const BoxConstraints(maxWidth: 900),
+            child: Column(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: const [
+                Text(
+                  'SCHEDULE',
+                  style: TextStyle(
+                    fontSize: 28,
+                    fontWeight: FontWeight.w900,
+                    letterSpacing: -.5,
+                  ),
+                ),
+                SizedBox(height: 6),
+                Text(
+                  'Your classes for this week',
+                  style: TextStyle(color: Colors.black54),
+                ),
+                SizedBox(height: 28),
+
+                _RouteDay(
+                  day: 'MONDAY',
+                  subjects: [
+                    ['Organization of Database Management Systems. L', '14:10 - 15:00', 'Bazarbekov I', 'Main 301'],
+                    ['Authors Programs. L', '15:10 - 16:00', 'Shorokhov D', 'Main 604'],
+                    ['Authors Programs. PS', '16:10 - 18:10', 'Shorokhov D', 'Main 207'],
+                  ],
+                ),
+
+                _RouteDay(
+                  day: 'TUESDAY',
+                  subjects: [
+                    ['Artificial Intelligence in Cybersecurity', '14:00 - 16:00', 'Akhmed G.Z', 'Main 607'],
+                    ['Cryptographic Methods of Information Security', '16:10 - 18:00', 'V.V', 'Online'],
+                  ],
+                ),
+
+                _RouteDay(
+                  day: 'WEDNESDAY',
+                  subjects: [
+                    ['Philosophy', '12:10 - 13:00', 'Batayeva S.A', 'Bayzak 216B'],
+                  ],
+                ),
+
+                _RouteDay(
+                  day: 'THURSDAY',
+                  subjects: [
+                    ['Organization and architecture of computing systems. L', '11:00 - 11:50', 'Pustovoi E', 'Bayzak 304B'],
+                    ['Design Pattern. L', '12:10 - 13:00', 'V.V', 'Bayzak 216B'],
+                  ],
+                ),
+
+                _RouteDay(
+                  day: 'FRIDAY',
+                  subjects: [
+                    ['Cryptographic Methods of Information Security. L', '19:30 - 20:20', 'Ashraf O', 'Main 422'],
+                    ['Philosophy', '20:30 - 21:20', 'Begalinov A', 'Online'],
+                  ],
+                ),
+              ],
+            ),
+          ),
+        ),
+      ),
+    );
+  }
+}
+class _RouteDay extends StatelessWidget {
+  final String day;
+  final List<List<String>> subjects;
+
+  const _RouteDay({
+    required this.day,
+    required this.subjects,
+  });
+
+  @override
+  Widget build(BuildContext context) {
+    return Padding(
+      padding: const EdgeInsets.only(bottom: 26),
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          Text(
+            day,
+            style: const TextStyle(
+              color: iituRed,
+              fontWeight: FontWeight.w900,
+              letterSpacing: 1.3,
+            ),
+          ),
+          const SizedBox(height: 10),
+          ...subjects.map(
+                (subject) => Container(
+              width: double.infinity,
+              margin: const EdgeInsets.only(bottom: 8),
+              padding: const EdgeInsets.all(18),
+              decoration: const BoxDecoration(
+                color: Colors.white,
+                border: Border(
+                  left: BorderSide(color: iituRed, width: 4),
+                ),
+              ),
+              child: Row(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: [
+                  SizedBox(
+                    width: 120,
+                    child: Text(
+                      subject[1],
+                      style: const TextStyle(
+                        fontWeight: FontWeight.w800,
+                        color: iituRed,
+                      ),
+                    ),
+                  ),
+                  Expanded(
+                    child: Column(
+                      crossAxisAlignment: CrossAxisAlignment.start,
+                      children: [
+                        Text(
+                          subject[0],
+                          style: const TextStyle(
+                            fontSize: 16,
+                            fontWeight: FontWeight.w800,
+                          ),
+                        ),
+                        const SizedBox(height: 7),
+                        Text(
+                          '${subject[2]}  •  ${subject[3]}',
+                          style: const TextStyle(color: Colors.black54),
+                        ),
+                      ],
+                    ),
+                  ),
+                ],
+              ),
+            ),
+          ),
+        ],
+      ),
+    );
+  }
+}
+// Stores information about one campus service.
+class CampusService {
+  final String name;
+  final String description;
+  final String location;
+  final String hours;
+  final String contact;
+
+  const CampusService({
+    required this.name,
+    required this.description,
+    required this.location,
+    required this.hours,
+    required this.contact,
+  });
+}
+// Fallback screen for an unknown or incorrect route.
+class UnknownRouteScreen extends StatelessWidget {
+  final String routeName;
+
+  const UnknownRouteScreen({
+    super.key,
+    required this.routeName,
+  });
+
+  @override
+  Widget build(BuildContext context) {
+    return Scaffold(
+      backgroundColor: pageBg,
+      appBar: AppBar(
+        backgroundColor: iituRed,
+        foregroundColor: Colors.white,
+        title: const Text(
+          'PAGE NOT FOUND',
+          style: TextStyle(
+            fontSize: 15,
+            fontWeight: FontWeight.w900,
+            letterSpacing: 1.2,
+          ),
+        ),
+      ),
+      body: Center(
+        child: Padding(
+          padding: const EdgeInsets.all(24),
+          child: Column(
+            mainAxisSize: MainAxisSize.min,
+            children: [
+              const Icon(
+                Icons.error_outline,
+                size: 80,
+                color: iituRed,
+              ),
+              const SizedBox(height: 20),
+              const Text(
+                '404',
+                style: TextStyle(
+                  fontSize: 42,
+                  fontWeight: FontWeight.w900,
+                ),
+              ),
+              const SizedBox(height: 8),
+              const Text(
+                'Page not found',
+                style: TextStyle(
+                  fontSize: 22,
+                  fontWeight: FontWeight.w800,
+                ),
+              ),
+              const SizedBox(height: 10),
+              Text(
+                'Unknown route: $routeName',
+                textAlign: TextAlign.center,
+                style: const TextStyle(
+                  color: Colors.black54,
+                ),
+              ),
+              const SizedBox(height: 28),
+              ElevatedButton.icon(
+                onPressed: () {
+                  Navigator.pop(context);
+                },
+                icon: const Icon(Icons.arrow_back),
+                label: const Text('GO BACK'),
+                style: ElevatedButton.styleFrom(
+                  backgroundColor: iituRed,
+                  foregroundColor: Colors.white,
+                  padding: const EdgeInsets.symmetric(
+                    horizontal: 24,
+                    vertical: 14,
+                  ),
+                ),
+              ),
+            ],
+          ),
+        ),
+      ),
+    );
+  }
+}
+// Student Profile is a separate named route.
+class StudentProfileScreen extends StatelessWidget {
+  const StudentProfileScreen({super.key});
+
+  @override
+  Widget build(BuildContext context) {
+    return Scaffold(
+      backgroundColor: pageBg,
+      appBar: AppBar(
+        backgroundColor: iituRed,
+        foregroundColor: Colors.white,
+        title: const Text(
+          'STUDENT PROFILE',
+          style: TextStyle(
+            fontSize: 15,
+            fontWeight: FontWeight.w900,
+            letterSpacing: 1.2,
+          ),
+        ),
+      ),
+      body: SingleChildScrollView(
+        padding: const EdgeInsets.fromLTRB(20, 30, 20, 60),
+        child: Center(
+          child: ConstrainedBox(
+            constraints: const BoxConstraints(maxWidth: 700),
+            child: Column(
+              children: [
+                const CircleAvatar(
+                  radius: 48,
+                  backgroundColor: iituRed,
+                  child: Icon(
+                    Icons.person_outline,
+                    size: 50,
+                    color: Colors.white,
+                  ),
+                ),
+                const SizedBox(height: 16),
+
+                const Text(
+                  'Student Profile',
+                  style: TextStyle(
+                    fontSize: 26,
+                    fontWeight: FontWeight.w900,
+                  ),
+                ),
+                const SizedBox(height: 6),
+
+                const Text(
+                  'International IT University',
+                  style: TextStyle(
+                    color: Colors.black54,
+                  ),
+                ),
+                const SizedBox(height: 30),
+
+                _profileInfo(
+                  Icons.badge_outlined,
+                  'Student ID',
+                  'Student Account',
+                ),
+                _profileInfo(
+                  Icons.school_outlined,
+                  'Programme',
+                  'Computer Security',
+                ),
+                _profileInfo(
+                  Icons.email_outlined,
+                  'Email',
+                  'student@iitu.edu.kz',
+                ),
+                _profileInfo(
+                  Icons.location_city_outlined,
+                  'University',
+                  'International IT University',
+                ),
+              ],
+            ),
+          ),
+        ),
+      ),
+    );
+  }
+
+  Widget _profileInfo(
+      IconData icon,
+      String title,
+      String value,
+      ) {
+    return Container(
+      width: double.infinity,
+      margin: const EdgeInsets.only(bottom: 10),
+      padding: const EdgeInsets.all(18),
+      color: Colors.white,
+      child: Row(
+        children: [
+          Icon(icon, color: iituRed),
+          const SizedBox(width: 16),
+          Expanded(
+            child: Column(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                Text(
+                  title,
+                  style: const TextStyle(
+                    fontSize: 12,
+                    color: Colors.black54,
+                  ),
+                ),
+                const SizedBox(height: 4),
+                Text(
+                  value,
+                  style: const TextStyle(
+                    fontWeight: FontWeight.w800,
+                  ),
+                ),
+              ],
+            ),
+          ),
+        ],
+      ),
+    );
+  }
+}
+// Stores information about one campus event.
+class CampusEvent {
+  final String title;
+  final String date;
+  final String time;
+  final String location;
+  final String description;
+
+  const CampusEvent({
+    required this.title,
+    required this.date,
+    required this.time,
+    required this.location,
+    required this.description,
+  });
+}
+// Campus Events is a separate named route.
+class CampusEventsScreen extends StatelessWidget {
+  const CampusEventsScreen({super.key});
+
+  @override
+  Widget build(BuildContext context) {
+    return Scaffold(
+      backgroundColor: pageBg,
+      appBar: AppBar(
+        backgroundColor: iituRed,
+        foregroundColor: Colors.white,
+        title: const Text(
+          'CAMPUS EVENTS',
+          style: TextStyle(
+            fontSize: 15,
+            fontWeight: FontWeight.w900,
+            letterSpacing: 1.2,
+          ),
+        ),
+      ),
+      body: ListView(
+        padding: const EdgeInsets.fromLTRB(20, 24, 20, 60),
+        children: const [
+          Text(
+            'UPCOMING EVENTS',
+            style: TextStyle(
+              fontSize: 28,
+              fontWeight: FontWeight.w900,
+            ),
+          ),
+          SizedBox(height: 6),
+          Text(
+            'Discover what is happening around campus.',
+            style: TextStyle(color: Colors.black54),
+          ),
+          SizedBox(height: 25),
+
+          _CampusEventCard(
+            date: '10 OCT',
+            title: 'Student Club Fair',
+            location: 'Main Hall',
+            time: '12:00 - 15:00',
+            event: CampusEvent(
+              title: 'Student Club Fair',
+              date: '10 OCT',
+              time: '12:00 - 15:00',
+              location: 'Main Hall',
+              description:
+              'Meet student clubs, discover campus activities and find new opportunities to participate in university life.',
+            ),
+          ),
+
+          _CampusEventCard(
+            date: '15 OCT',
+            title: 'Cybersecurity Workshop',
+            location: 'Computer Lab',
+            time: '14:00 - 16:00',
+            event: CampusEvent(
+              title: 'Cybersecurity Workshop',
+              date: '15 OCT',
+              time: '14:00 - 16:00',
+              location: 'Computer Lab',
+              description:
+              'A practical workshop where students can learn more about cybersecurity concepts, tools and current security challenges.',
+            ),
+          ),
+
+          _CampusEventCard(
+            date: '22 OCT',
+            title: 'University Sports Day',
+            location: 'Sports Centre',
+            time: '10:00 - 17:00',
+            event: CampusEvent(
+              title: 'Sirius Day',
+              date: '22 OCT',
+              time: '10:00 - 17:00',
+              location: 'Sports Centre',
+              description:
+              'A university sports event with activities, competitions and opportunities for students to spend time together.',
+            ),
+          ),
+        ],
+      ),
+    );
+  }
+}
+// Displays full information about the selected campus event.
+class EventDetailScreen extends StatelessWidget {
+  final CampusEvent event;
+
+  const EventDetailScreen({
+    super.key,
+    required this.event,
+  });
+
+  @override
+  Widget build(BuildContext context) {
+    return Scaffold(
+      backgroundColor: pageBg,
+      appBar: AppBar(
+        backgroundColor: iituRed,
+        foregroundColor: Colors.white,
+        title: const Text(
+          'EVENT DETAILS',
+          style: TextStyle(
+            fontSize: 15,
+            fontWeight: FontWeight.w900,
+            letterSpacing: 1.2,
+          ),
+        ),
+      ),
+      body: SingleChildScrollView(
+        padding: const EdgeInsets.all(20),
+        child: Column(
+          crossAxisAlignment: CrossAxisAlignment.start,
+          children: [
+            Text(
+              event.date,
+              style: const TextStyle(
+                color: iituRed,
+                fontWeight: FontWeight.w900,
+                letterSpacing: 1.2,
+              ),
+            ),
+            const SizedBox(height: 10),
+
+            Text(
+              event.title,
+              style: const TextStyle(
+                fontSize: 28,
+                fontWeight: FontWeight.w900,
+              ),
+            ),
+            const SizedBox(height: 24),
+
+            _eventInfo(
+              Icons.access_time,
+              'Time',
+              event.time,
+            ),
+            _eventInfo(
+              Icons.location_on_outlined,
+              'Location',
+              event.location,
+            ),
+
+            const SizedBox(height: 22),
+
+            const Text(
+              'ABOUT THIS EVENT',
+              style: TextStyle(
+                fontSize: 13,
+                fontWeight: FontWeight.w900,
+                letterSpacing: 1.1,
+              ),
+            ),
+            const SizedBox(height: 10),
+
+            Text(
+              event.description,
+              style: const TextStyle(
+                fontSize: 16,
+                height: 1.5,
+                color: Colors.black54,
+              ),
+            ),
+          ],
+        ),
+      ),
+    );
+  }
+
+  Widget _eventInfo(
+      IconData icon,
+      String title,
+      String value,
+      ) {
+    return Container(
+      width: double.infinity,
+      margin: const EdgeInsets.only(bottom: 10),
+      padding: const EdgeInsets.all(16),
+      color: Colors.white,
+      child: Row(
+        children: [
+          Icon(icon, color: iituRed),
+          const SizedBox(width: 14),
+          Column(
+            crossAxisAlignment: CrossAxisAlignment.start,
+            children: [
+              Text(
+                title,
+                style: const TextStyle(
+                  fontSize: 12,
+                  color: Colors.black54,
+                ),
+              ),
+              const SizedBox(height: 3),
+              Text(
+                value,
+                style: const TextStyle(
+                  fontWeight: FontWeight.w700,
+                ),
+              ),
+            ],
+          ),
+        ],
+      ),
+    );
+  }
+}
+class _CampusEventCard extends StatelessWidget {
+  final String date;
+  final String title;
+  final String location;
+  final String time;
+  final CampusEvent event;
+
+  const _CampusEventCard({
+    required this.date,
+    required this.title,
+    required this.location,
+    required this.time,
+    required this.event,
+  });
+
+  @override
+  Widget build(BuildContext context) {
+    return InkWell(
+        onTap: () {
+          // Opens event details using a direct MaterialPageRoute.
+          Navigator.push(
+            context,
+            MaterialPageRoute(
+              builder: (context) => EventDetailScreen(event: event),
+            ),
+          );
+        },
+        child: Container(
+      margin: const EdgeInsets.only(bottom: 12),
+      padding: const EdgeInsets.all(18),
+      color: Colors.white,
+      child: Row(
+        children: [
+          Container(
+            width: 62,
+            height: 62,
+            alignment: Alignment.center,
+            color: iituRed,
+            child: Text(
+              date,
+              textAlign: TextAlign.center,
+              style: const TextStyle(
+                color: Colors.white,
+                fontWeight: FontWeight.w900,
+              ),
+            ),
+          ),
+          const SizedBox(width: 16),
+          Expanded(
+            child: Column(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                Text(
+                  title,
+                  style: const TextStyle(
+                    fontSize: 16,
+                    fontWeight: FontWeight.w800,
+                  ),
+                ),
+                const SizedBox(height: 7),
+                Text(
+                  '$time  •  $location',
+                  style: const TextStyle(
+                    color: Colors.black54,
+                  ),
+                ),
+              ],
+            ),
+          ),
+        ],
+      ),
+        ),
+    );
+  }
+}
+// Campus Services is a separate named route.
+class CampusServicesScreen extends StatelessWidget {
+  const CampusServicesScreen({super.key});
+
+  @override
+  Widget build(BuildContext context) {
+    return Scaffold(
+      backgroundColor: pageBg,
+      appBar: AppBar(
+        backgroundColor: iituRed,
+        foregroundColor: Colors.white,
+        title: const Text(
+          'CAMPUS SERVICES',
+          style: TextStyle(
+            fontSize: 15,
+            fontWeight: FontWeight.w900,
+            letterSpacing: 1.2,
+          ),
+        ),
+      ),
+      body: ListView(
+        padding: const EdgeInsets.all(20),
+        children: const [
+          Text(
+            'STUDENT SERVICES',
+            style: TextStyle(
+              fontSize: 28,
+              fontWeight: FontWeight.w900,
+            ),
+          ),
+          SizedBox(height: 6),
+          Text(
+            'Select a service to view more information.',
+            style: TextStyle(color: Colors.black54),
+          ),
+          SizedBox(height: 25),
+
+          _CampusServiceTile(
+            icon: Icons.computer_outlined,
+            title: 'IT Support',
+            subtitle: 'Technical and campus system support',
+            service: CampusService(
+              name: 'IT Support',
+              description:
+              'Provides technical support for university systems, student accounts, Wi-Fi and other IT-related issues.',
+              location: 'Main Building, Room 105',
+              hours: 'Monday - Friday, 09:00 - 18:00',
+              contact: 'support@iitu.edu.kz',
+            ),
+          ),
+
+          _CampusServiceTile(
+            icon: Icons.school_outlined,
+            title: 'Academic Support',
+            subtitle: 'Help with academic and study-related questions',
+            service: CampusService(
+              name: 'Academic Support',
+              description:
+              'Provides support for students with academic questions, study planning and university learning processes.',
+              location: 'Main Building, Room 203',
+              hours: 'Monday - Friday, 09:00 - 17:00',
+              contact: 'academic@iitu.edu.kz',
+            ),
+          ),
+
+          _CampusServiceTile(
+            icon: Icons.local_library_outlined,
+            title: 'Library Services',
+            subtitle: 'Books, learning resources and study spaces',
+            service: CampusService(
+              name: 'Library Services',
+              description:
+              'Provides access to books, digital learning resources and study spaces for students.',
+              location: 'Main Building, Library',
+              hours: 'Monday - Saturday, 08:00 - 20:00',
+              contact: 'library@iitu.edu.kz',
+            ),
+          ),
+
+          _CampusServiceTile(
+            icon: Icons.groups_outlined,
+            title: 'Student Affairs',
+            subtitle: 'Student activities and campus support',
+            service: CampusService(
+              name: 'Student Affairs',
+              description:
+              'Supports students with campus activities, student organisations and general university life.',
+              location: 'Main Building, Room 110',
+              hours: 'Monday - Friday, 09:00 - 18:00',
+              contact: 'studentaffairs@iitu.edu.kz',
+            ),
+          ),
+        ],
+      ),
+    );
+  }
+}
+
+// Shows full information about the selected campus service.
+class ServiceDetailScreen extends StatelessWidget {
+  final CampusService service;
+
+  const ServiceDetailScreen({
+    super.key,
+    required this.service,
+  });
+
+  @override
+  Widget build(BuildContext context) {
+    return Scaffold(
+      backgroundColor: pageBg,
+      appBar: AppBar(
+        backgroundColor: iituRed,
+        foregroundColor: Colors.white,
+        title: const Text(
+          'SERVICE DETAILS',
+          style: TextStyle(
+            fontSize: 15,
+            fontWeight: FontWeight.w900,
+            letterSpacing: 1.2,
+          ),
+        ),
+      ),
+      body: SingleChildScrollView(
+        padding: const EdgeInsets.all(20),
+        child: Column(
+          crossAxisAlignment: CrossAxisAlignment.start,
+          children: [
+            Text(
+              service.name,
+              style: const TextStyle(
+                fontSize: 28,
+                fontWeight: FontWeight.w900,
+              ),
+            ),
+            const SizedBox(height: 12),
+
+            Text(
+              service.description,
+              style: const TextStyle(
+                fontSize: 16,
+                height: 1.5,
+                color: Colors.black54,
+              ),
+            ),
+            const SizedBox(height: 28),
+
+            _detailRow(
+              Icons.location_on_outlined,
+              'Location',
+              service.location,
+            ),
+            _detailRow(
+              Icons.access_time,
+              'Opening Hours',
+              service.hours,
+            ),
+            _detailRow(
+              Icons.contact_support_outlined,
+              'Contact',
+              service.contact,
+            ),
+
+            const SizedBox(height: 30),
+
+            SizedBox(
+              width: double.infinity,
+              child: ElevatedButton.icon(
+                onPressed: () {
+                  // Returns a result to the previous screen after the service request.
+                  Navigator.pop(context, 'requested');
+                },
+                icon: const Icon(Icons.check_circle_outline),
+                label: const Text('REQUEST SERVICE'),
+                style: ElevatedButton.styleFrom(
+                  backgroundColor: iituRed,
+                  foregroundColor: Colors.white,
+                  padding: const EdgeInsets.symmetric(vertical: 16),
+                ),
+              ),
+            ),
+          ],
+        ),
+      ),
+    );
+  }
+
+  Widget _detailRow(
+      IconData icon,
+      String title,
+      String value,
+      ) {
+    return Container(
+      width: double.infinity,
+      margin: const EdgeInsets.only(bottom: 10),
+      padding: const EdgeInsets.all(16),
+      color: Colors.white,
+      child: Row(
+        children: [
+          Icon(icon, color: iituRed),
+          const SizedBox(width: 14),
+          Expanded(
+            child: Column(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                Text(
+                  title,
+                  style: const TextStyle(
+                    fontSize: 12,
+                    color: Colors.black54,
+                  ),
+                ),
+                const SizedBox(height: 3),
+                Text(
+                  value,
+                  style: const TextStyle(
+                    fontWeight: FontWeight.w700,
+                  ),
+                ),
+              ],
+            ),
+          ),
+        ],
+      ),
+    );
+  }
+}
+class _CampusServiceTile extends StatelessWidget {
+  final IconData icon;
+  final String title;
+  final String subtitle;
+  final CampusService service;
+
+  const _CampusServiceTile({
+    required this.icon,
+    required this.title,
+    required this.subtitle,
+    required this.service,
+  });
+
+  @override
+  Widget build(BuildContext context) {
+    return Container(
+      margin: const EdgeInsets.only(bottom: 10),
+      child: ListTile(
+        tileColor: Colors.white,
+        contentPadding: const EdgeInsets.all(18),
+        leading: Icon(icon, color: iituRed, size: 30),
+        title: Text(
+          title,
+          style: const TextStyle(
+            fontWeight: FontWeight.w800,
+            fontSize: 16,
+          ),
+        ),
+        subtitle: Padding(
+          padding: const EdgeInsets.only(top: 5),
+          child: Text(subtitle),
+        ),
+        trailing: const Icon(Icons.arrow_forward_ios, size: 16),
+        onTap: () async {
+          // Passes the selected service object to the details screen.
+          final result = await Navigator.pushNamed(
+            context,
+            AppRoutes.serviceDetail,
+            arguments: service,
+          );
+// Shows visible feedback when a result is returned from the details screen.
+          if (result == 'requested' && context.mounted) {
+            ScaffoldMessenger.of(context).showSnackBar(
+              SnackBar(
+                content: Text(
+                  '${service.name} request submitted successfully!',
+                ),
+              ),
+            );
+          }
+        },
+      ),
+    );
+  }
+}
 class _Stat extends StatelessWidget {
   final String value;
   final String label;
