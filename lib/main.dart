@@ -1,6 +1,17 @@
 import 'package:flutter/material.dart';
+import 'package:firebase_core/firebase_core.dart';
+import 'firebase_options.dart';
+import 'package:cloud_firestore/cloud_firestore.dart';
+import 'package:firebase_auth/firebase_auth.dart';
+import 'package:shared_preferences/shared_preferences.dart';
 
-void main() {
+Future<void> main() async {
+  WidgetsFlutterBinding.ensureInitialized();
+
+  await Firebase.initializeApp(
+    options: DefaultFirebaseOptions.currentPlatform,
+  );
+
   runApp(const MyCampusApp());
 }
 
@@ -2029,6 +2040,24 @@ class StudentServiceFormPage extends StatefulWidget {
 
 class _StudentServiceFormPageState extends State<StudentServiceFormPage> {
   final _formKey = GlobalKey<FormState>();
+  String? _lastRequestId;
+
+  @override
+  void initState() {
+    super.initState();
+    _loadLastRequestId();
+  }
+
+  Future<void> _loadLastRequestId() async {
+    final prefs = await SharedPreferences.getInstance();
+    final savedId = prefs.getString('lastRequestId');
+
+    if (!mounted) return;
+
+    setState(() {
+      _lastRequestId = savedId;
+    });
+  }
 
   final _nameController = TextEditingController();
   final _idController = TextEditingController();
@@ -2599,6 +2628,21 @@ class _StudentServiceFormPageState extends State<StudentServiceFormPage> {
                       ],
                     ),
 
+                    const SizedBox(height: 15),
+
+                    SizedBox(
+                      width: double.infinity,
+                      child: OutlinedButton.icon(
+                        onPressed: _lastRequestId == null ? null : _viewSavedRequest,
+                        icon: const Icon(Icons.cloud_download_outlined),
+                        label: const Text('VIEW SAVED REQUEST'),
+                        style: OutlinedButton.styleFrom(
+                          foregroundColor: iituRed,
+                          padding: const EdgeInsets.symmetric(vertical: 18),
+                        ),
+                      ),
+                    ),
+
                     const SizedBox(height: 50),
                   ],
                 ),
@@ -2609,10 +2653,52 @@ class _StudentServiceFormPageState extends State<StudentServiceFormPage> {
       ),
     );
   }
-  void _submitForm() {
-    if (_formKey.currentState!.validate()) {
-      _formKey.currentState!.save();
 
+  Future<void> _submitForm() async {
+    if (!_formKey.currentState!.validate()) return;
+
+    _formKey.currentState!.save();
+
+    try {
+      // Sign in anonymously if the user is not signed in.
+      User? user = FirebaseAuth.instance.currentUser;
+
+      if (user == null) {
+        final credential =
+        await FirebaseAuth.instance.signInAnonymously();
+        user = credential.user;
+      }
+
+      if (user == null) {
+        throw Exception('Could not authenticate the user.');
+      }
+
+      // Save the student request to Firestore.
+      final document = await FirebaseFirestore.instance
+          .collection('campusRequests')
+          .add({
+        'studentName': _nameController.text.trim(),
+        'studentId': _idController.text.trim(),
+        'serviceCategory': _selectedCategory,
+        'subject': _subjectController.text.trim(),
+        'urgency': _selectedUrgency,
+        'preferredContact': _preferredContact,
+        'preferredDate': _preferredDate == null
+            ? null
+            : Timestamp.fromDate(_preferredDate!),
+        'ownerUid': user.uid,
+        'status': 'Submitted',
+        'createdAt': FieldValue.serverTimestamp(),
+      });
+
+      if (!mounted) return;
+      setState(() {
+        _lastRequestId = document.id;
+      });
+      final prefs = await SharedPreferences.getInstance();
+      await prefs.setString('lastRequestId', document.id);
+
+      // Show confirmation after saving.
       showDialog(
         context: context,
         builder: (context) {
@@ -2630,17 +2716,17 @@ class _StudentServiceFormPageState extends State<StudentServiceFormPage> {
                 crossAxisAlignment: CrossAxisAlignment.start,
                 children: [
                   const Text(
-                    'Your campus service request has been submitted successfully.',
+                    'Your campus service request has been saved successfully.',
                   ),
                   const SizedBox(height: 20),
-
+                  Text('Request ID: ${document.id}'),
+                  const SizedBox(height: 10),
                   Text('Student: ${_nameController.text}'),
                   Text('Student ID: ${_idController.text}'),
                   Text('Service: $_selectedCategory'),
                   Text('Subject: ${_subjectController.text}'),
                   Text('Urgency: $_selectedUrgency'),
                   Text('Contact: $_preferredContact'),
-
                   if (_preferredDate != null)
                     Text(
                       'Date: ${_preferredDate!.day.toString().padLeft(2, '0')}/'
@@ -2652,14 +2738,89 @@ class _StudentServiceFormPageState extends State<StudentServiceFormPage> {
             ),
             actions: [
               TextButton(
-                onPressed: () {
-                  Navigator.pop(context);
-                },
+                onPressed: () => Navigator.pop(context),
                 child: const Text('OK'),
               ),
             ],
           );
         },
+      );
+    } catch (e) {
+      if (!mounted) return;
+
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(
+          content: Text('Failed to submit request: $e'),
+        ),
+      );
+    }
+  }
+
+  Future<void> _viewSavedRequest() async {
+    if (_lastRequestId == null) {
+      ScaffoldMessenger.of(context).showSnackBar(
+        const SnackBar(
+          content: Text('Please submit a request first.'),
+        ),
+      );
+      return;
+    }
+
+    try {
+      final document = await FirebaseFirestore.instance
+          .collection('campusRequests')
+          .doc(_lastRequestId)
+          .get(const GetOptions(source: Source.server));
+
+      if (!mounted) return;
+
+      if (!document.exists) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          const SnackBar(
+            content: Text('Request not found.'),
+          ),
+        );
+        return;
+      }
+
+      final data = document.data()!;
+
+      showDialog(
+        context: context,
+        builder: (context) => AlertDialog(
+          title: const Text('Saved Request from Firebase'),
+          content: SingleChildScrollView(
+            child: Column(
+              mainAxisSize: MainAxisSize.min,
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                Text('Request ID: ${document.id}'),
+                const SizedBox(height: 12),
+                Text('Student: ${data['studentName']}'),
+                Text('Student ID: ${data['studentId']}'),
+                Text('Service: ${data['serviceCategory']}'),
+                Text('Subject: ${data['subject']}'),
+                Text('Urgency: ${data['urgency']}'),
+                Text('Contact: ${data['preferredContact']}'),
+                Text('Status: ${data['status']}'),
+              ],
+            ),
+          ),
+          actions: [
+            TextButton(
+              onPressed: () => Navigator.pop(context),
+              child: const Text('OK'),
+            ),
+          ],
+        ),
+      );
+    } catch (e) {
+      if (!mounted) return;
+
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(
+          content: Text('Failed to load request: $e'),
+        ),
       );
     }
   }
