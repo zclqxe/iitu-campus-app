@@ -2028,7 +2028,205 @@ class DetailPage extends StatelessWidget {
     );
   }
 }
+class MyRequestsPage extends StatelessWidget {
+  const MyRequestsPage({super.key});
 
+  @override
+  Widget build(BuildContext context) {
+    final user = FirebaseAuth.instance.currentUser;
+
+    return Scaffold(
+      backgroundColor: pageBg,
+      appBar: AppBar(
+        title: const Text('MY REQUESTS'),
+        backgroundColor: iituRed,
+        foregroundColor: Colors.white,
+      ),
+      body: user == null
+          ? const Center(
+        child: Text('Please submit a request first.'),
+      )
+          : StreamBuilder<QuerySnapshot<Map<String, dynamic>>>(
+        stream: FirebaseFirestore.instance
+            .collection('campusRequests')
+            .where('ownerUid', isEqualTo: user.uid)
+            .snapshots(),
+        builder: (context, snapshot) {
+          if (snapshot.hasError) {
+            return const Center(
+              child: Text('Unable to load requests.'),
+            );
+          }
+
+          if (!snapshot.hasData) {
+            return const Center(
+              child: CircularProgressIndicator(),
+            );
+          }
+
+          final requests = snapshot.data!.docs.toList();
+
+          requests.sort((a, b) {
+            final aDate = a.data()['createdAt'] as Timestamp?;
+            final bDate = b.data()['createdAt'] as Timestamp?;
+
+            return (bDate?.millisecondsSinceEpoch ?? 0)
+                .compareTo(aDate?.millisecondsSinceEpoch ?? 0);
+          });
+
+          if (requests.isEmpty) {
+            return const Center(
+              child: Text('No requests submitted yet.'),
+            );
+          }
+
+          return ListView.builder(
+            padding: const EdgeInsets.all(20),
+            itemCount: requests.length,
+            itemBuilder: (context, index) {
+              final document = requests[index];
+              final data = document.data();
+
+              return Card(
+                margin: const EdgeInsets.only(bottom: 12),
+                child: ListTile(
+                  leading: const Icon(
+                    Icons.assignment_outlined,
+                    color: iituRed,
+                  ),
+                  title: Text(
+                    data['subject']?.toString() ?? 'Untitled Request',
+                  ),
+                  subtitle: Text(
+                    '${data['serviceCategory'] ?? 'Service'}'
+                        ' • ${data['status'] ?? 'Submitted'}',
+                  ),
+                  trailing: const Icon(Icons.chevron_right),
+                  onTap: () {
+                    Navigator.push(
+                      context,
+                      MaterialPageRoute(
+                        builder: (context) => RequestDetailsPage(
+                          requestId: document.id,
+                        ),
+                      ),
+                    );
+                  },
+                ),
+              );
+            },
+          );
+        },
+      ),
+    );
+  }
+}
+
+class RequestDetailsPage extends StatelessWidget {
+  final String requestId;
+
+  const RequestDetailsPage({
+    super.key,
+    required this.requestId,
+  });
+
+  @override
+  Widget build(BuildContext context) {
+    return Scaffold(
+      backgroundColor: pageBg,
+      appBar: AppBar(
+        title: const Text('REQUEST DETAILS'),
+        backgroundColor: iituRed,
+        foregroundColor: Colors.white,
+      ),
+      body: FutureBuilder<DocumentSnapshot<Map<String, dynamic>>>(
+        future: FirebaseFirestore.instance
+            .collection('campusRequests')
+            .doc(requestId)
+            .get(const GetOptions(source: Source.server)),
+        builder: (context, snapshot) {
+          if (snapshot.hasError) {
+            return const Center(
+              child: Text('Unable to load request from Firebase.'),
+            );
+          }
+
+          if (!snapshot.hasData) {
+            return const Center(
+              child: CircularProgressIndicator(),
+            );
+          }
+
+          final data = snapshot.data!.data();
+
+          if (data == null) {
+            return const Center(
+              child: Text('Request not found.'),
+            );
+          }
+
+          final fields = <String, dynamic>{
+            'Request ID': requestId,
+            'Student Name': data['studentName'],
+            'Student ID': data['studentId'],
+            'Email': data['email'],
+            'Phone': data['phone'],
+            'Service Category': data['serviceCategory'],
+            'Subject': data['subject'],
+            'Description': data['description'],
+            'Urgency': data['urgency'],
+            'Preferred Contact': data['preferredContact'],
+            'Status': data['status'],
+          };
+
+          final date = data['preferredDate'];
+          if (date is Timestamp) {
+            final value = date.toDate();
+            fields['Preferred Date'] =
+            '${value.day}/${value.month}/${value.year}';
+          }
+
+          return ListView(
+            padding: const EdgeInsets.all(20),
+            children: [
+              const Icon(
+                Icons.check_circle,
+                color: Colors.green,
+                size: 60,
+              ),
+              const SizedBox(height: 12),
+              const Center(
+                child: Text(
+                  'Your Request Information',
+                  style: TextStyle(
+                    fontSize: 22,
+                    fontWeight: FontWeight.bold,
+                  ),
+                ),
+              ),
+              const SizedBox(height: 20),
+              ...fields.entries.map(
+                    (entry) => Card(
+                  child: ListTile(
+                    title: Text(
+                      entry.key,
+                      style: const TextStyle(
+                        fontWeight: FontWeight.bold,
+                      ),
+                    ),
+                    subtitle: Text(
+                      entry.value?.toString() ?? 'Not provided',
+                    ),
+                  ),
+                ),
+              ),
+            ],
+          );
+        },
+      ),
+    );
+  }
+}
 
 class StudentServiceFormPage extends StatefulWidget {
   const StudentServiceFormPage({super.key});
@@ -2642,7 +2840,27 @@ class _StudentServiceFormPageState extends State<StudentServiceFormPage> {
                         ),
                       ),
                     ),
-
+                    const SizedBox(height: 15),
+                    SizedBox(
+                      width: double.infinity,
+                      child: ElevatedButton.icon(
+                        onPressed: () {
+                          Navigator.push(
+                            context,
+                            MaterialPageRoute(
+                              builder: (context) => const MyRequestsPage(),
+                            ),
+                          );
+                        },
+                        icon: const Icon(Icons.history),
+                        label: const Text('MY REQUESTS'),
+                        style: ElevatedButton.styleFrom(
+                          backgroundColor: iituRed,
+                          foregroundColor: Colors.white,
+                          padding: const EdgeInsets.symmetric(vertical: 18),
+                        ),
+                      ),
+                    ),
                     const SizedBox(height: 50),
                   ],
                 ),
@@ -2679,6 +2897,9 @@ class _StudentServiceFormPageState extends State<StudentServiceFormPage> {
           .add({
         'studentName': _nameController.text.trim(),
         'studentId': _idController.text.trim(),
+        'email': _emailController.text.trim(),
+        'phone': _phoneController.text.trim(),
+        'description': _detailsController.text.trim(),
         'serviceCategory': _selectedCategory,
         'subject': _subjectController.text.trim(),
         'urgency': _selectedUrgency,
@@ -2738,8 +2959,19 @@ class _StudentServiceFormPageState extends State<StudentServiceFormPage> {
             ),
             actions: [
               TextButton(
-                onPressed: () => Navigator.pop(context),
-                child: const Text('OK'),
+                onPressed: () {
+                  Navigator.pop(context);
+
+                  Navigator.push(
+                    context,
+                    MaterialPageRoute(
+                      builder: (context) => RequestDetailsPage(
+                        requestId: document.id,
+                      ),
+                    ),
+                  );
+                },
+                child: const Text('VIEW REQUEST DETAILS'),
               ),
             ],
           );
