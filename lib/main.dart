@@ -6,13 +6,13 @@ import 'package:firebase_auth/firebase_auth.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 
 Future<void> main() async {
-WidgetsFlutterBinding.ensureInitialized();
+  WidgetsFlutterBinding.ensureInitialized();
 
-await Firebase.initializeApp(
-options: DefaultFirebaseOptions.currentPlatform,
-);
+  await Firebase.initializeApp(
+    options: DefaultFirebaseOptions.currentPlatform,
+  );
 
-runApp(const MyCampusApp());
+  runApp(const MyCampusApp());
 }
 
 const iituRed = Color(0xFFC8102E);
@@ -20,3062 +20,3233 @@ const iituDark = Color(0xFF171717);
 const pageBg = Color(0xFFF5F5F3);
 
 class AppRoutes {
-static const home = '/';
-static const timetable = '/timetable';
-static const services = '/services';
-static const events = '/events';
-static const profile = '/profile';
-static const serviceDetail = '/service-detail';
+  static const home = '/';
+  static const timetable = '/timetable';
+  static const services = '/services';
+  static const events = '/events';
+  static const profile = '/profile';
+  static const serviceDetail = '/service-detail';
 }
 
 class MyCampusApp extends StatelessWidget {
-const MyCampusApp({super.key});
+  const MyCampusApp({super.key});
 
-@override
-Widget build(BuildContext context) {
-return MaterialApp(
-debugShowCheckedModeBanner: false,
-title: 'IITU Student Campus',
-theme: ThemeData(
-useMaterial3: true,
-scaffoldBackgroundColor: pageBg,
-colorScheme: ColorScheme.fromSeed(seedColor: iituRed),
-fontFamily: 'Arial',
-),
-initialRoute: AppRoutes.home,
-routes: {
-AppRoutes.home: (context) => const CampusHomePage(),
-AppRoutes.timetable: (context) => const TimetableScreen(),
-AppRoutes.services: (context) => const CampusServicesScreen(),
-AppRoutes.events: (context) => const CampusEventsScreen(),
-AppRoutes.profile: (context) => const StudentProfileScreen(),
-AppRoutes.serviceDetail: (context) {
-final service =
-ModalRoute.of(context)!.settings.arguments as CampusService;
+  @override
+  Widget build(BuildContext context) {
+    return MaterialApp(
+      debugShowCheckedModeBanner: false,
+      title: 'IITU Student Campus',
+      theme: ThemeData(
+        useMaterial3: true,
+        scaffoldBackgroundColor: pageBg,
+        colorScheme: ColorScheme.fromSeed(seedColor: iituRed),
+        fontFamily: 'Arial',
+      ),
+      initialRoute: AppRoutes.home,
+      routes: {
+        AppRoutes.home: (context) => const CampusHomePage(),
+        AppRoutes.timetable: (context) => const TimetableScreen(),
+        AppRoutes.services: (context) => const CampusServicesScreen(),
+        AppRoutes.events: (context) => const CampusEventsScreen(),
+        AppRoutes.profile: (context) => const StudentProfileScreen(),
+        AppRoutes.serviceDetail: (context) {
+          final service =
+          ModalRoute.of(context)!.settings.arguments as CampusService;
 
-return ServiceDetailScreen(service: service);
-},
-},
+          return ServiceDetailScreen(service: service);
+        },
+      },
 // Handles invalid route names and prevents navigation errors.
-onUnknownRoute: (settings) {
-return MaterialPageRoute(
-builder: (context) => UnknownRouteScreen(
-routeName: settings.name ?? 'Unknown',
-),
-);
-},
+      onUnknownRoute: (settings) {
+        return MaterialPageRoute(
+          builder: (context) => UnknownRouteScreen(
+            routeName: settings.name ?? 'Unknown',
+          ),
+        );
+      },
 
-);
-}
+    );
+  }
 }
 
 class CampusHomePage extends StatefulWidget {
-const CampusHomePage({super.key});
+  const CampusHomePage({super.key});
 
-@override
-State<CampusHomePage> createState() => _CampusHomePageState();
+  @override
+  State<CampusHomePage> createState() => _CampusHomePageState();
 }
 
 class _CampusHomePageState extends State<CampusHomePage> {
-int _currentIndex = 0;
-int _reminderCount = 0;
+  int _currentIndex = 0;
+  int _reminderCount = 0;
 
-final List<String> _titles = const [
-'IITU STUDENT CAMPUS',
-'MY SCHEDULE',
-'MY PROFILE',
-];
+  final List<String> _titles = const [
+    'IITU STUDENT CAMPUS',
+    'MY SCHEDULE',
+    'MY PROFILE',
+  ];
 
-void _showMessage(String message) {
-ScaffoldMessenger.of(context).showSnackBar(
-SnackBar(content: Text(message), duration: const Duration(seconds: 2)),
-);
-}
+  void _showMessage(String message) {
+    ScaffoldMessenger.of(context).showSnackBar(
+      SnackBar(content: Text(message), duration: const Duration(seconds: 2)),
+    );
+  }
 
-void _changePage(int index) {
-setState(() => _currentIndex = index);
-}
+  void _changePage(int index) {
+    setState(() => _currentIndex = index);
+  }
 
-void _openPage(String title, Widget child) {
+  void _openPage(String title, Widget child) {
 // Direct route using MaterialPageRoute for simple information pages.
-Navigator.push(
-context,
-MaterialPageRoute(
-builder: (_) => DetailPage(title: title, child: child),
-),
-);
-}
+    Navigator.push(
+      context,
+      MaterialPageRoute(
+        builder: (_) => DetailPage(title: title, child: child),
+      ),
+    );
+  }
 
-@override
-Widget build(BuildContext context) {
-return Scaffold(
-appBar: AppBar(
-backgroundColor: iituRed,
-foregroundColor: Colors.white,
-elevation: 0,
-title: Text(
-_titles[_currentIndex],
-style: const TextStyle(
-fontSize: 15,
-fontWeight: FontWeight.w800,
-letterSpacing: 1.4,
-),
-),
-centerTitle: true,
-actions: [
-IconButton(
-icon: const Icon(Icons.notifications_none_rounded),
-onPressed: () => _showMessage('No new notifications'),
-),
-],
-),
-drawer: _buildDrawer(),
-body: IndexedStack(
-index: _currentIndex,
-children: [
-_buildHomePage(),
-_buildSchedulePage(),
-_buildProfilePage(),
-],
-),
-floatingActionButton: FloatingActionButton(
-backgroundColor: iituRed,
-foregroundColor: Colors.white,
-tooltip: 'Add Reminder',
-onPressed: () {
-setState(() => _reminderCount++);
-_showMessage('Reminder added! Total: $_reminderCount');
-},
-child: const Icon(Icons.add),
-),
-bottomNavigationBar: NavigationBar(
-selectedIndex: _currentIndex,
-indicatorColor: const Color(0xFFFFDDE3),
-onDestinationSelected: (index) {
-if (index == 2) {
-Navigator.pushNamed(context, AppRoutes.profile);
-} else {
-_changePage(index);
-}
-},
-destinations: const [
-NavigationDestination(
-icon: Icon(Icons.home_outlined),
-selectedIcon: Icon(Icons.home),
-label: 'Home',
-),
-NavigationDestination(
-icon: Icon(Icons.calendar_month_outlined),
-selectedIcon: Icon(Icons.calendar_month),
-label: 'Schedule',
-),
-NavigationDestination(
-icon: Icon(Icons.person_outline),
-selectedIcon: Icon(Icons.person),
-label: 'Profile',
-),
-],
-),
-);
-}
+  @override
+  Widget build(BuildContext context) {
+    return Scaffold(
+      appBar: AppBar(
+        backgroundColor: iituRed,
+        foregroundColor: Colors.white,
+        elevation: 0,
+        title: Text(
+          _titles[_currentIndex],
+          style: const TextStyle(
+            fontSize: 15,
+            fontWeight: FontWeight.w800,
+            letterSpacing: 1.4,
+          ),
+        ),
+        centerTitle: true,
+        actions: [
+          IconButton(
+            icon: const Icon(Icons.notifications_none_rounded),
+            onPressed: () => _showMessage('No new notifications'),
+          ),
+        ],
+      ),
+      drawer: _buildDrawer(),
+      body: IndexedStack(
+        index: _currentIndex,
+        children: [
+          _buildHomePage(),
+          _buildSchedulePage(),
+          _buildProfilePage(),
+        ],
+      ),
+      floatingActionButton: FloatingActionButton(
+        backgroundColor: iituRed,
+        foregroundColor: Colors.white,
+        tooltip: 'Add Reminder',
+        onPressed: () {
+          setState(() => _reminderCount++);
+          _showMessage('Reminder added! Total: $_reminderCount');
+        },
+        child: const Icon(Icons.add),
+      ),
+      bottomNavigationBar: NavigationBar(
+        selectedIndex: _currentIndex,
+        indicatorColor: const Color(0xFFFFDDE3),
+        onDestinationSelected: (index) {
+          if (index == 2) {
+            Navigator.pushNamed(context, AppRoutes.profile);
+          } else {
+            _changePage(index);
+          }
+        },
+        destinations: const [
+          NavigationDestination(
+            icon: Icon(Icons.home_outlined),
+            selectedIcon: Icon(Icons.home),
+            label: 'Home',
+          ),
+          NavigationDestination(
+            icon: Icon(Icons.calendar_month_outlined),
+            selectedIcon: Icon(Icons.calendar_month),
+            label: 'Schedule',
+          ),
+          NavigationDestination(
+            icon: Icon(Icons.person_outline),
+            selectedIcon: Icon(Icons.person),
+            label: 'Profile',
+          ),
+        ],
+      ),
+    );
+  }
 
-Widget _buildDrawer() {
-return Drawer(
-child: ListView(
-padding: EdgeInsets.zero,
-children: [
-const DrawerHeader(
-decoration: BoxDecoration(color: iituRed),
-child: Column(
-crossAxisAlignment: CrossAxisAlignment.start,
-mainAxisAlignment: MainAxisAlignment.end,
-children: [
-CircleAvatar(
-radius: 26,
-backgroundColor: Colors.white,
-child: Icon(Icons.school, color: iituRed, size: 30),
-),
-SizedBox(height: 12),
-Text(
-'IITU',
-style: TextStyle(
-color: Colors.white,
-fontSize: 26,
-fontWeight: FontWeight.w900,
-letterSpacing: 2,
-),
-),
-Text(
-'Student Campus',
-style: TextStyle(color: Colors.white70),
-),
-],
-),
-),
-_drawerItem(Icons.home_outlined, 'Home', () => _changePage(0)),
-_drawerItem(
-Icons.calendar_month_outlined, 'My Schedule', () => _changePage(1)),
-_drawerItem(Icons.person_outline, 'My Profile', () => _changePage(2)),
-const Divider(),
-_drawerItem(
-Icons.school_outlined,
-'Faculties',
-() => _openPage('FACULTIES', _facultiesContent()),
-),
-_drawerItem(
-Icons.groups_outlined,
-'Student Clubs',
-() => _openPage('STUDENT CLUBS', _clubsContent()),
-),
-_drawerItem(
-Icons.help_outline,
-'Help Centre',
-() => _openPage('HELP CENTRE', _helpContent()),
-),
-],
-),
-);
-}
+  Widget _buildDrawer() {
+    return Drawer(
+      child: ListView(
+        padding: EdgeInsets.zero,
+        children: [
+          const DrawerHeader(
+            decoration: BoxDecoration(color: iituRed),
+            child: Column(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              mainAxisAlignment: MainAxisAlignment.end,
+              children: [
+                CircleAvatar(
+                  radius: 26,
+                  backgroundColor: Colors.white,
+                  child: Icon(Icons.school, color: iituRed, size: 30),
+                ),
+                SizedBox(height: 12),
+                Text(
+                  'IITU',
+                  style: TextStyle(
+                    color: Colors.white,
+                    fontSize: 26,
+                    fontWeight: FontWeight.w900,
+                    letterSpacing: 2,
+                  ),
+                ),
+                Text(
+                  'Student Campus',
+                  style: TextStyle(color: Colors.white70),
+                ),
+              ],
+            ),
+          ),
+          _drawerItem(Icons.home_outlined, 'Home', () => _changePage(0)),
+          _drawerItem(
+              Icons.calendar_month_outlined, 'My Schedule', () => _changePage(1)),
+          _drawerItem(Icons.person_outline, 'My Profile', () => _changePage(2)),
+          const Divider(),
+          _drawerItem(
+            Icons.school_outlined,
+            'Faculties',
+                () => _openPage('FACULTIES', _facultiesContent()),
+          ),
+          _drawerItem(
+            Icons.groups_outlined,
+            'Student Clubs',
+                () => _openPage('STUDENT CLUBS', _clubsContent()),
+          ),
+          _drawerItem(
+            Icons.help_outline,
+            'Help Centre',
+                () => _openPage('HELP CENTRE', _helpContent()),
+          ),
+        ],
+      ),
+    );
+  }
 
-Widget _drawerItem(IconData icon, String title, VoidCallback action) {
-return ListTile(
-leading: Icon(icon),
-title: Text(title),
-onTap: () {
-Navigator.pop(context);
-action();
-},
-);
-}
+  Widget _drawerItem(IconData icon, String title, VoidCallback action) {
+    return ListTile(
+      leading: Icon(icon),
+      title: Text(title),
+      onTap: () {
+        Navigator.pop(context);
+        action();
+      },
+    );
+  }
 
 // ======================== HOME ========================
 
-Widget _buildHomePage() {
-return LayoutBuilder(
-builder: (context, constraints) {
-final contentWidth = constraints.maxWidth > 1180 ? 1120.0 : constraints.maxWidth;
-return SingleChildScrollView(
-child: Center(
-child: SizedBox(
-width: contentWidth,
-child: Padding(
-padding: const EdgeInsets.fromLTRB(20, 24, 20, 100),
-child: Column(
-crossAxisAlignment: CrossAxisAlignment.start,
-children: [
-_hero(),
-const SizedBox(height: 46),
-_sectionHeader('STUDENT SERVICES', 'Explore campus'),
-const SizedBox(height: 10),
-_servicesGrid(),
-const SizedBox(height: 48),
-_sectionHeader('ACADEMIC OVERVIEW', 'Your progress'),
-const SizedBox(height: 16),
-_academicOverview(),
-const SizedBox(height: 48),
-_sectionHeader('CAMPUS SERVICES', 'For students'),
-const SizedBox(height: 16),
-_campusServices(),
-const SizedBox(height: 48),
-_sectionHeader('NEWS & EVENTS', 'What’s happening'),
-const SizedBox(height: 16),
-_events(),
-],
-),
-),
-),
-),
-);
-},
-);
-}
+  Widget _buildHomePage() {
+    return LayoutBuilder(
+      builder: (context, constraints) {
+        final contentWidth = constraints.maxWidth > 1180 ? 1120.0 : constraints.maxWidth;
+        return SingleChildScrollView(
+          child: Center(
+            child: SizedBox(
+              width: contentWidth,
+              child: Padding(
+                padding: const EdgeInsets.fromLTRB(20, 24, 20, 100),
+                child: Column(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: [
+                    _hero(),
+                    const SizedBox(height: 46),
+                    _sectionHeader('STUDENT SERVICES', 'Explore campus'),
+                    const SizedBox(height: 10),
+                    _servicesGrid(),
+                    const SizedBox(height: 48),
+                    _sectionHeader('ACADEMIC OVERVIEW', 'Your progress'),
+                    const SizedBox(height: 16),
+                    _academicOverview(),
+                    const SizedBox(height: 48),
+                    _sectionHeader('CAMPUS SERVICES', 'For students'),
+                    const SizedBox(height: 16),
+                    _campusServices(),
+                    const SizedBox(height: 48),
+                    _sectionHeader('NEWS & EVENTS', 'What’s happening'),
+                    const SizedBox(height: 16),
+                    _events(),
+                  ],
+                ),
+              ),
+            ),
+          ),
+        );
+      },
+    );
+  }
 
-Widget _hero() {
-return Container(
-height: 410,
-width: double.infinity,
-decoration: BoxDecoration(
-borderRadius: BorderRadius.circular(4),
-image: const DecorationImage(
-image: AssetImage('assets/images/muitiitu.jpg'),
-fit: BoxFit.cover,
-),
-),
-child: Container(
-padding: const EdgeInsets.all(34),
-decoration: BoxDecoration(
-borderRadius: BorderRadius.circular(4),
-gradient: LinearGradient(
-begin: Alignment.centerLeft,
-end: Alignment.centerRight,
-colors: [
-Colors.black.withValues(alpha: .82),
-Colors.black.withValues(alpha: .48),
-Colors.transparent,
-],
-),
-),
-child: const Column(
-crossAxisAlignment: CrossAxisAlignment.start,
-mainAxisAlignment: MainAxisAlignment.end,
-children: [
-Text(
-'INTERNATIONAL\nINFORMATION TECHNOLOGY\nUNIVERSITY',
-style: TextStyle(
-color: Colors.white70,
-fontSize: 12,
-fontWeight: FontWeight.w700,
-letterSpacing: 1.8,
-height: 1.4,
-),
-),
-SizedBox(height: 14),
-Text(
-'THE DIGITAL FUTURE\nBEGINS HERE',
-style: TextStyle(
-color: Colors.white,
-fontSize: 38,
-height: .98,
-fontWeight: FontWeight.w900,
-letterSpacing: -.8,
-),
-),
-SizedBox(height: 18),
-Row(
-children: [
-Icon(Icons.shield_outlined, color: Colors.white, size: 18),
-SizedBox(width: 8),
-Text(
-'Almaty, Kazakhstan',
-style: TextStyle(
-color: Colors.white,
-fontSize: 14,
-fontWeight: FontWeight.w500,
-),
-),
-],
-),
-],
-),
-),
-);
-}
+  Widget _hero() {
+    return Container(
+      height: 410,
+      width: double.infinity,
+      decoration: BoxDecoration(
+        borderRadius: BorderRadius.circular(4),
+        image: const DecorationImage(
+          image: AssetImage('assets/images/muitiitu.jpg'),
+          fit: BoxFit.cover,
+        ),
+      ),
+      child: Container(
+        padding: const EdgeInsets.all(34),
+        decoration: BoxDecoration(
+          borderRadius: BorderRadius.circular(4),
+          gradient: LinearGradient(
+            begin: Alignment.centerLeft,
+            end: Alignment.centerRight,
+            colors: [
+              Colors.black.withValues(alpha: .82),
+              Colors.black.withValues(alpha: .48),
+              Colors.transparent,
+            ],
+          ),
+        ),
+        child: const Column(
+          crossAxisAlignment: CrossAxisAlignment.start,
+          mainAxisAlignment: MainAxisAlignment.end,
+          children: [
+            Text(
+              'INTERNATIONAL\nINFORMATION TECHNOLOGY\nUNIVERSITY',
+              style: TextStyle(
+                color: Colors.white70,
+                fontSize: 12,
+                fontWeight: FontWeight.w700,
+                letterSpacing: 1.8,
+                height: 1.4,
+              ),
+            ),
+            SizedBox(height: 14),
+            Text(
+              'THE DIGITAL FUTURE\nBEGINS HERE',
+              style: TextStyle(
+                color: Colors.white,
+                fontSize: 38,
+                height: .98,
+                fontWeight: FontWeight.w900,
+                letterSpacing: -.8,
+              ),
+            ),
+            SizedBox(height: 18),
+            Row(
+              children: [
+                Icon(Icons.shield_outlined, color: Colors.white, size: 18),
+                SizedBox(width: 8),
+                Text(
+                  'Almaty, Kazakhstan',
+                  style: TextStyle(
+                    color: Colors.white,
+                    fontSize: 14,
+                    fontWeight: FontWeight.w500,
+                  ),
+                ),
+              ],
+            ),
+          ],
+        ),
+      ),
+    );
+  }
 
-Widget _sectionHeader(String title, String small) {
-return Row(
-crossAxisAlignment: CrossAxisAlignment.end,
-children: [
-Expanded(
-child: Text(
-title,
-style: const TextStyle(
-fontSize: 24,
-fontWeight: FontWeight.w900,
-letterSpacing: -.3,
-color: iituDark,
-),
-),
-),
-Text(
-small.toUpperCase(),
-style: const TextStyle(
-color: Colors.black45,
-fontSize: 11,
-fontWeight: FontWeight.w700,
-letterSpacing: 1,
-),
-),
-],
-);
-}
+  Widget _sectionHeader(String title, String small) {
+    return Row(
+      crossAxisAlignment: CrossAxisAlignment.end,
+      children: [
+        Expanded(
+          child: Text(
+            title,
+            style: const TextStyle(
+              fontSize: 24,
+              fontWeight: FontWeight.w900,
+              letterSpacing: -.3,
+              color: iituDark,
+            ),
+          ),
+        ),
+        Text(
+          small.toUpperCase(),
+          style: const TextStyle(
+            color: Colors.black45,
+            fontSize: 11,
+            fontWeight: FontWeight.w700,
+            letterSpacing: 1,
+          ),
+        ),
+      ],
+    );
+  }
 
-Widget _servicesGrid() {
-final items = [
+  Widget _servicesGrid() {
+    final items = [
 // Opens the timetable using a named route.
-('01', 'Schedule', Icons.calendar_month_outlined,
-() => Navigator.pushNamed(context, AppRoutes.timetable)),
-('02', 'Faculties', Icons.school_outlined,
-() => _openPage('FACULTIES', _facultiesContent())),
-('03', 'Student Clubs', Icons.groups_outlined,
-() => _openPage('STUDENT CLUBS', _clubsContent())),
-('04', 'Campus Services', Icons.support_agent_outlined,
-() => Navigator.pushNamed(context, AppRoutes.services)),
-('05', 'Contacts', Icons.phone_outlined,
-() => _openPage('CONTACTS', _contactsContent())),
-('06', 'Campus Events', Icons.event_outlined,
-() => Navigator.pushNamed(context, AppRoutes.events)),
-];
+      ('01', 'Schedule', Icons.calendar_month_outlined,
+          () => Navigator.pushNamed(context, AppRoutes.timetable)),
+      ('02', 'Faculties', Icons.school_outlined,
+          () => _openPage('FACULTIES', _facultiesContent())),
+      ('03', 'Student Clubs', Icons.groups_outlined,
+          () => _openPage('STUDENT CLUBS', _clubsContent())),
+      ('04', 'Campus Services', Icons.support_agent_outlined,
+          () => Navigator.pushNamed(context, AppRoutes.services)),
+      ('05', 'Contacts', Icons.phone_outlined,
+          () => _openPage('CONTACTS', _contactsContent())),
+      ('06', 'Campus Events', Icons.event_outlined,
+          () => Navigator.pushNamed(context, AppRoutes.events)),
+    ];
 
-return LayoutBuilder(
-builder: (context, c) {
-final columns = c.maxWidth > 760 ? 3 : 2;
-final width = (c.maxWidth - (columns - 1) * 1) / columns;
-return Wrap(
-children: items.map((item) {
-return SizedBox(
-width: width,
-child: _serviceLink(
-item.$1,
-item.$2,
-item.$3,
-item.$4,
-),
-);
-}).toList(),
-);
-},
-);
-}
+    return LayoutBuilder(
+      builder: (context, c) {
+        final columns = c.maxWidth > 760 ? 3 : 2;
+        final width = (c.maxWidth - (columns - 1) * 1) / columns;
+        return Wrap(
+          children: items.map((item) {
+            return SizedBox(
+              width: width,
+              child: _serviceLink(
+                item.$1,
+                item.$2,
+                item.$3,
+                item.$4,
+              ),
+            );
+          }).toList(),
+        );
+      },
+    );
+  }
 
-Widget _serviceLink(
-String number, String title, IconData icon, VoidCallback onTap) {
-return InkWell(
-onTap: onTap,
-child: Container(
-height: 118,
-padding: const EdgeInsets.all(18),
-decoration: BoxDecoration(
-color: Colors.white,
-border: Border.all(color: const Color(0xFFE3E3E3), width: .6),
-),
-child: Row(
-children: [
-Text(
-number,
-style: const TextStyle(
-color: iituRed,
-fontSize: 13,
-fontWeight: FontWeight.w800,
-),
-),
-const SizedBox(width: 14),
-Icon(icon, color: iituDark, size: 25),
-const SizedBox(width: 12),
-Expanded(
-child: Text(
-title,
-style: const TextStyle(
-fontSize: 16,
-fontWeight: FontWeight.w800,
-),
-),
-),
-const Icon(Icons.arrow_outward, size: 18, color: Colors.black45),
-],
-),
-),
-);
-}
+  Widget _serviceLink(
+      String number, String title, IconData icon, VoidCallback onTap) {
+    return InkWell(
+      onTap: onTap,
+      child: Container(
+        height: 118,
+        padding: const EdgeInsets.all(18),
+        decoration: BoxDecoration(
+          color: Colors.white,
+          border: Border.all(color: const Color(0xFFE3E3E3), width: .6),
+        ),
+        child: Row(
+          children: [
+            Text(
+              number,
+              style: const TextStyle(
+                color: iituRed,
+                fontSize: 13,
+                fontWeight: FontWeight.w800,
+              ),
+            ),
+            const SizedBox(width: 14),
+            Icon(icon, color: iituDark, size: 25),
+            const SizedBox(width: 12),
+            Expanded(
+              child: Text(
+                title,
+                style: const TextStyle(
+                  fontSize: 16,
+                  fontWeight: FontWeight.w800,
+                ),
+              ),
+            ),
+            const Icon(Icons.arrow_outward, size: 18, color: Colors.black45),
+          ],
+        ),
+      ),
+    );
+  }
 
-Widget _academicOverview() {
-return Container(
-color: iituDark,
-padding: const EdgeInsets.symmetric(vertical: 30, horizontal: 20),
-child: const Row(
-children: [
-Expanded(child: _Stat(value: '3.0', label: 'GPA')),
-_VerticalLine(),
-Expanded(child: _Stat(value: '05', label: 'SEMESTER')),
-_VerticalLine(),
-Expanded(child: _Stat(value: '03', label: 'YEAR')),
-],
-),
-);
-}
+  Widget _academicOverview() {
+    return Container(
+      color: iituDark,
+      padding: const EdgeInsets.symmetric(vertical: 30, horizontal: 20),
+      child: const Row(
+        children: [
+          Expanded(child: _Stat(value: '3.0', label: 'GPA')),
+          _VerticalLine(),
+          Expanded(child: _Stat(value: '05', label: 'SEMESTER')),
+          _VerticalLine(),
+          Expanded(child: _Stat(value: '03', label: 'YEAR')),
+        ],
+      ),
+    );
+  }
 
-Widget _campusServices() {
-return Column(
-children: [
-_wideLink(
-Icons.local_library_outlined,
-'Library',
-'Study spaces, books and learning resources',
-() => _openPage('LIBRARY', _libraryContent()),
-),
-_wideLink(
-Icons.support_agent_outlined,
-'Student Service Centre',
-'Submit a campus service request',
-() {
-Navigator.push(
-context,
-MaterialPageRoute(
-builder: (context) => const StudentServiceFormPage(),
-),
-);
-},
-),
-_wideLink(
-Icons.science_outlined,
-'Science',
-'Scientific activity of the University',
-() => _openPage('SCIENCE', _scienceContent()),
-),
-],
-);
-}
+  Widget _campusServices() {
+    return Column(
+      children: [
+        _wideLink(
+          Icons.local_library_outlined,
+          'Library',
+          'Study spaces, books and learning resources',
+              () => _openPage('LIBRARY', _libraryContent()),
+        ),
+        _wideLink(
+          Icons.support_agent_outlined,
+          'Student Service Centre',
+          'Submit a campus service request',
+              () {
+            Navigator.push(
+              context,
+              MaterialPageRoute(
+                builder: (context) => const StudentServiceFormPage(),
+              ),
+            );
+          },
+        ),
+        _wideLink(
+          Icons.science_outlined,
+          'Science',
+          'Scientific activity of the University',
+              () => _openPage('SCIENCE', _scienceContent()),
+        ),
+      ],
+    );
+  }
 
-Widget _wideLink(
-IconData icon, String title, String subtitle, VoidCallback onTap) {
-return InkWell(
-onTap: onTap,
-child: Container(
-width: double.infinity,
-padding: const EdgeInsets.symmetric(vertical: 22, horizontal: 20),
-decoration: const BoxDecoration(
-color: Colors.white,
-border: Border(bottom: BorderSide(color: Color(0xFFE3E3E3))),
-),
-child: Row(
-children: [
-Icon(icon, color: iituRed, size: 28),
-const SizedBox(width: 18),
-Expanded(
-child: Column(
-crossAxisAlignment: CrossAxisAlignment.start,
-children: [
-Text(title,
-style: const TextStyle(
-fontSize: 17, fontWeight: FontWeight.w800)),
-const SizedBox(height: 3),
-Text(subtitle,
-style: const TextStyle(color: Colors.black54)),
-],
-),
-),
-const Icon(Icons.arrow_forward, size: 20),
-],
-),
-),
-);
-}
+  Widget _wideLink(
+      IconData icon, String title, String subtitle, VoidCallback onTap) {
+    return InkWell(
+      onTap: onTap,
+      child: Container(
+        width: double.infinity,
+        padding: const EdgeInsets.symmetric(vertical: 22, horizontal: 20),
+        decoration: const BoxDecoration(
+          color: Colors.white,
+          border: Border(bottom: BorderSide(color: Color(0xFFE3E3E3))),
+        ),
+        child: Row(
+          children: [
+            Icon(icon, color: iituRed, size: 28),
+            const SizedBox(width: 18),
+            Expanded(
+              child: Column(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: [
+                  Text(title,
+                      style: const TextStyle(
+                          fontSize: 17, fontWeight: FontWeight.w800)),
+                  const SizedBox(height: 3),
+                  Text(subtitle,
+                      style: const TextStyle(color: Colors.black54)),
+                ],
+              ),
+            ),
+            const Icon(Icons.arrow_forward, size: 20),
+          ],
+        ),
+      ),
+    );
+  }
 
-Widget _events() {
-return Column(
-children: [
-_eventRow('05', 'OCT', 'Cybersecurity Workshop', '14:00',
-Icons.security_outlined),
-_eventRow('10', 'OCT', 'Student Life Fair', '14:00',
-Icons.groups_outlined),
-_eventRow('18', 'OCT', 'The Last NOT Late Night Show', '18:00',
-Icons.celebration_outlined),
-],
-);
-}
+  Widget _events() {
+    return Column(
+      children: [
+        _eventRow('05', 'OCT', 'Cybersecurity Workshop', '14:00',
+            Icons.security_outlined),
+        _eventRow('10', 'OCT', 'Student Life Fair', '14:00',
+            Icons.groups_outlined),
+        _eventRow('18', 'OCT', 'The Last NOT Late Night Show', '18:00',
+            Icons.celebration_outlined),
+      ],
+    );
+  }
 
-Widget _eventRow(
-String day, String month, String title, String time, IconData icon) {
-return InkWell(
-onTap: () => _showMessage('$title selected'),
-child: Container(
-margin: const EdgeInsets.only(bottom: 10),
-padding: const EdgeInsets.all(18),
-color: Colors.white,
-child: Row(
-children: [
-SizedBox(
-width: 55,
-child: Column(
-children: [
-Text(day,
-style: const TextStyle(
-color: iituRed,
-fontSize: 25,
-fontWeight: FontWeight.w900)),
-Text(month,
-style: const TextStyle(
-fontSize: 11, fontWeight: FontWeight.w700)),
-],
-),
-),
-const SizedBox(width: 14),
-Icon(icon, color: Colors.black54),
-const SizedBox(width: 14),
-Expanded(
-child: Text(title,
-style: const TextStyle(
-fontSize: 16, fontWeight: FontWeight.w700)),
-),
-Text(time, style: const TextStyle(color: Colors.black54)),
-const SizedBox(width: 12),
-const Icon(Icons.arrow_outward, size: 18),
-],
-),
-),
-);
-}
+  Widget _eventRow(
+      String day, String month, String title, String time, IconData icon) {
+    return InkWell(
+      onTap: () => _showMessage('$title selected'),
+      child: Container(
+        margin: const EdgeInsets.only(bottom: 10),
+        padding: const EdgeInsets.all(18),
+        color: Colors.white,
+        child: Row(
+          children: [
+            SizedBox(
+              width: 55,
+              child: Column(
+                children: [
+                  Text(day,
+                      style: const TextStyle(
+                          color: iituRed,
+                          fontSize: 25,
+                          fontWeight: FontWeight.w900)),
+                  Text(month,
+                      style: const TextStyle(
+                          fontSize: 11, fontWeight: FontWeight.w700)),
+                ],
+              ),
+            ),
+            const SizedBox(width: 14),
+            Icon(icon, color: Colors.black54),
+            const SizedBox(width: 14),
+            Expanded(
+              child: Text(title,
+                  style: const TextStyle(
+                      fontSize: 16, fontWeight: FontWeight.w700)),
+            ),
+            Text(time, style: const TextStyle(color: Colors.black54)),
+            const SizedBox(width: 12),
+            const Icon(Icons.arrow_outward, size: 18),
+          ],
+        ),
+      ),
+    );
+  }
 
 // ======================== SCHEDULE ========================
 
-Widget _buildSchedulePage() {
-return SingleChildScrollView(
-padding: const EdgeInsets.fromLTRB(20, 24, 20, 100),
-child: Center(
-child: ConstrainedBox(
-constraints: const BoxConstraints(maxWidth: 900),
-child: Column(
-crossAxisAlignment: CrossAxisAlignment.start,
-children: [
-const Text('SCHEDULE',
-style: TextStyle(
-fontSize: 28,
-fontWeight: FontWeight.w900,
-letterSpacing: -.5)),
-const SizedBox(height: 6),
-const Text('Your classes for this week',
-style: TextStyle(color: Colors.black54)),
-const SizedBox(height: 28),
-_day('MONDAY', [
-['Organization of Database Management Systems. L', '14:10 - 15:00', 'Bazarbekov I', 'Main 301'],
-['Authors Programs. L', '15:10 - 16:00', 'Shorokhov D', 'Main 604'],
-['Authors Programs. PS', '16:10 - 18:10', 'Shorokhov D', 'Main 207'],
-]),
-_day('TUESDAY', [
-['Artificial Intelligence in Cybersecurity', '14:00 - 16:00', 'Akhmed G.Z', 'Main 607'],
-['Cryptographic Methods of Information Security', '16:10 - 18:00', 'V.V', 'Online'],
-]),
-_day('WEDNESDAY', [
-['Philosophy', '12:10 - 13:00', 'Batayeva S.A', 'Bayzak 216B'],
-]),
-_day('THURSDAY', [
-['Organization and architecture of computing systems. L', '11:00 - 11:50', 'Pustovoi E', 'Bayzak 304B'],
-['Design Pattern. L', '12:10 - 13:00', 'V.V', 'Bayzak 216B'],
-]),
-_day('FRIDAY', [
-['Cryptographic Methods of Information Security. L', '19:30 - 20:20', 'Ashraf O', 'Main 422'],
-['Philosophy', '20:30 - 21:20', 'Begalinov A', 'Online'],
-]),
-],
-),
-),
-),
-);
-}
+  Widget _buildSchedulePage() {
+    return SingleChildScrollView(
+      padding: const EdgeInsets.fromLTRB(20, 24, 20, 100),
+      child: Center(
+        child: ConstrainedBox(
+          constraints: const BoxConstraints(maxWidth: 900),
+          child: Column(
+            crossAxisAlignment: CrossAxisAlignment.start,
+            children: [
+              const Text('SCHEDULE',
+                  style: TextStyle(
+                      fontSize: 28,
+                      fontWeight: FontWeight.w900,
+                      letterSpacing: -.5)),
+              const SizedBox(height: 6),
+              const Text('Your classes for this week',
+                  style: TextStyle(color: Colors.black54)),
+              const SizedBox(height: 28),
+              _day('MONDAY', [
+                ['Organization of Database Management Systems. L', '14:10 - 15:00', 'Bazarbekov I', 'Main 301'],
+                ['Authors Programs. L', '15:10 - 16:00', 'Shorokhov D', 'Main 604'],
+                ['Authors Programs. PS', '16:10 - 18:10', 'Shorokhov D', 'Main 207'],
+              ]),
+              _day('TUESDAY', [
+                ['Artificial Intelligence in Cybersecurity', '14:00 - 16:00', 'Akhmed G.Z', 'Main 607'],
+                ['Cryptographic Methods of Information Security', '16:10 - 18:00', 'V.V', 'Online'],
+              ]),
+              _day('WEDNESDAY', [
+                ['Philosophy', '12:10 - 13:00', 'Batayeva S.A', 'Bayzak 216B'],
+              ]),
+              _day('THURSDAY', [
+                ['Organization and architecture of computing systems. L', '11:00 - 11:50', 'Pustovoi E', 'Bayzak 304B'],
+                ['Design Pattern. L', '12:10 - 13:00', 'V.V', 'Bayzak 216B'],
+              ]),
+              _day('FRIDAY', [
+                ['Cryptographic Methods of Information Security. L', '19:30 - 20:20', 'Ashraf O', 'Main 422'],
+                ['Philosophy', '20:30 - 21:20', 'Begalinov A', 'Online'],
+              ]),
+            ],
+          ),
+        ),
+      ),
+    );
+  }
 
-Widget _day(String title, List<List<String>> subjects) {
-return Padding(
-padding: const EdgeInsets.only(bottom: 26),
-child: Column(
-crossAxisAlignment: CrossAxisAlignment.start,
-children: [
-Text(title,
-style: const TextStyle(
-color: iituRed,
-fontWeight: FontWeight.w900,
-letterSpacing: 1.3)),
-const SizedBox(height: 10),
-...subjects.map((s) => _subjectCard(s[0], s[1], s[2], s[3])),
-],
-),
-);
-}
+  Widget _day(String title, List<List<String>> subjects) {
+    return Padding(
+      padding: const EdgeInsets.only(bottom: 26),
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          Text(title,
+              style: const TextStyle(
+                  color: iituRed,
+                  fontWeight: FontWeight.w900,
+                  letterSpacing: 1.3)),
+          const SizedBox(height: 10),
+          ...subjects.map((s) => _subjectCard(s[0], s[1], s[2], s[3])),
+        ],
+      ),
+    );
+  }
 
-Widget _subjectCard(
-String subject, String time, String teacher, String room) {
-return Container(
-width: double.infinity,
-margin: const EdgeInsets.only(bottom: 8),
-padding: const EdgeInsets.all(18),
-decoration: const BoxDecoration(
-color: Colors.white,
-border: Border(left: BorderSide(color: iituRed, width: 4)),
-),
-child: Row(
-crossAxisAlignment: CrossAxisAlignment.start,
-children: [
-SizedBox(
-width: 120,
-child: Text(time,
-style: const TextStyle(
-fontWeight: FontWeight.w800, color: iituRed)),
-),
-Expanded(
-child: Column(
-crossAxisAlignment: CrossAxisAlignment.start,
-children: [
-Text(subject,
-style: const TextStyle(
-fontSize: 16, fontWeight: FontWeight.w800)),
-const SizedBox(height: 7),
-Text('$teacher  •  $room',
-style: const TextStyle(color: Colors.black54)),
-],
-),
-),
-],
-),
-);
-}
+  Widget _subjectCard(
+      String subject, String time, String teacher, String room) {
+    return Container(
+      width: double.infinity,
+      margin: const EdgeInsets.only(bottom: 8),
+      padding: const EdgeInsets.all(18),
+      decoration: const BoxDecoration(
+        color: Colors.white,
+        border: Border(left: BorderSide(color: iituRed, width: 4)),
+      ),
+      child: Row(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          SizedBox(
+            width: 120,
+            child: Text(time,
+                style: const TextStyle(
+                    fontWeight: FontWeight.w800, color: iituRed)),
+          ),
+          Expanded(
+            child: Column(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                Text(subject,
+                    style: const TextStyle(
+                        fontSize: 16, fontWeight: FontWeight.w800)),
+                const SizedBox(height: 7),
+                Text('$teacher  •  $room',
+                    style: const TextStyle(color: Colors.black54)),
+              ],
+            ),
+          ),
+        ],
+      ),
+    );
+  }
 
 // ======================== PROFILE ========================
 
-Widget _buildProfilePage() {
-return SingleChildScrollView(
-padding: const EdgeInsets.fromLTRB(20, 30, 20, 100),
-child: Center(
-child: ConstrainedBox(
-constraints: const BoxConstraints(maxWidth: 850),
-child: Column(
-children: [
-Container(
-width: double.infinity,
-padding: const EdgeInsets.all(30),
-color: iituDark,
-child: const Row(
-children: [
-CircleAvatar(
-radius: 44,
-backgroundColor: Colors.white,
-child: Icon(Icons.person, size: 50, color: iituRed),
-),
-SizedBox(width: 22),
-Expanded(
-child: Column(
-crossAxisAlignment: CrossAxisAlignment.start,
-children: [
-Text('Tussupova Dariya',
-style: TextStyle(
-color: Colors.white,
-fontSize: 26,
-fontWeight: FontWeight.w900)),
-SizedBox(height: 5),
-Text('6B06301 • Computer Security',
-style: TextStyle(color: Colors.white70)),
-],
-),
-),
-Text('GPA\n3.0',
-textAlign: TextAlign.center,
-style: TextStyle(
-color: Colors.white,
-fontSize: 18,
-fontWeight: FontWeight.w800)),
-],
-),
-),
-const SizedBox(height: 20),
-_profileItem(Icons.badge_outlined, 'Student ID', '436798'),
-_profileItem(Icons.school_outlined, 'Degree Programme',
-'6B06301 - Computer Security'),
-_profileItem(Icons.calendar_today_outlined, 'Course', '3'),
-_profileItem(
-Icons.email_outlined, 'Email', 'student@iitu.edu.kz'),
-_profileItem(Icons.check_circle_outline, 'Status', 'Active Student'),
-],
-),
-),
-),
-);
-}
+  Widget _buildProfilePage() {
+    return SingleChildScrollView(
+      padding: const EdgeInsets.fromLTRB(20, 30, 20, 100),
+      child: Center(
+        child: ConstrainedBox(
+          constraints: const BoxConstraints(maxWidth: 850),
+          child: Column(
+            children: [
+              Container(
+                width: double.infinity,
+                padding: const EdgeInsets.all(30),
+                color: iituDark,
+                child: const Row(
+                  children: [
+                    CircleAvatar(
+                      radius: 44,
+                      backgroundColor: Colors.white,
+                      child: Icon(Icons.person, size: 50, color: iituRed),
+                    ),
+                    SizedBox(width: 22),
+                    Expanded(
+                      child: Column(
+                        crossAxisAlignment: CrossAxisAlignment.start,
+                        children: [
+                          Text('Tussupova Dariya',
+                              style: TextStyle(
+                                  color: Colors.white,
+                                  fontSize: 26,
+                                  fontWeight: FontWeight.w900)),
+                          SizedBox(height: 5),
+                          Text('6B06301 • Computer Security',
+                              style: TextStyle(color: Colors.white70)),
+                        ],
+                      ),
+                    ),
+                    Text('GPA\n3.0',
+                        textAlign: TextAlign.center,
+                        style: TextStyle(
+                            color: Colors.white,
+                            fontSize: 18,
+                            fontWeight: FontWeight.w800)),
+                  ],
+                ),
+              ),
+              const SizedBox(height: 20),
+              _profileItem(Icons.badge_outlined, 'Student ID', '436798'),
+              _profileItem(Icons.school_outlined, 'Degree Programme',
+                  '6B06301 - Computer Security'),
+              _profileItem(Icons.calendar_today_outlined, 'Course', '3'),
+              _profileItem(
+                  Icons.email_outlined, 'Email', 'student@iitu.edu.kz'),
+              _profileItem(Icons.check_circle_outline, 'Status', 'Active Student'),
+            ],
+          ),
+        ),
+      ),
+    );
+  }
 
-Widget _profileItem(IconData icon, String title, String value) {
-return Container(
-width: double.infinity,
-margin: const EdgeInsets.only(bottom: 8),
-padding: const EdgeInsets.all(18),
-color: Colors.white,
-child: Row(
-children: [
-Icon(icon, color: iituRed),
-const SizedBox(width: 16),
-SizedBox(
-width: 150,
-child: Text(title,
-style: const TextStyle(
-color: Colors.black54, fontWeight: FontWeight.w600)),
-),
-Expanded(
-child: Text(value,
-style: const TextStyle(
-fontSize: 15, fontWeight: FontWeight.w800)),
-),
-],
-),
-);
-}
+  Widget _profileItem(IconData icon, String title, String value) {
+    return Container(
+      width: double.infinity,
+      margin: const EdgeInsets.only(bottom: 8),
+      padding: const EdgeInsets.all(18),
+      color: Colors.white,
+      child: Row(
+        children: [
+          Icon(icon, color: iituRed),
+          const SizedBox(width: 16),
+          SizedBox(
+            width: 150,
+            child: Text(title,
+                style: const TextStyle(
+                    color: Colors.black54, fontWeight: FontWeight.w600)),
+          ),
+          Expanded(
+            child: Text(value,
+                style: const TextStyle(
+                    fontSize: 15, fontWeight: FontWeight.w800)),
+          ),
+        ],
+      ),
+    );
+  }
 
 // ======================== DETAIL PAGE CONTENT ========================
 
-Widget _facultiesContent() {
-return Column(
-children: [
-_infoCard(
-'01',
-'Computer Technologies and Cybersecurity',
-'Study programmes related to information technology, software, computing and cybersecurity.',
-Icons.computer_outlined,
-),
-_infoCard(
-'02',
-'Business, Media and Management',
-'Study programmes combining technology with business, management and media.',
-Icons.business_center_outlined,
-),
-],
-);
-}
+  Widget _facultiesContent() {
+    return Column(
+      children: [
+        _infoCard(
+          '01',
+          'Computer Technologies and Cybersecurity',
+          'Study programmes related to information technology, software, computing and cybersecurity.',
+          Icons.computer_outlined,
+        ),
+        _infoCard(
+          '02',
+          'Business, Media and Management',
+          'Study programmes combining technology with business, management and media.',
+          Icons.business_center_outlined,
+        ),
+      ],
+    );
+  }
 
-Widget _clubsContent() {
-return Column(
-children: [
-_infoCard('01', 'Shadows',
-'Dance ensemble created to popularize the culture and traditions of various dance styles.', Icons.groups),
-_infoCard('02', 'OSIT ',
-'Student organization dedicated to build a strong IT community.', Icons.code),
-_infoCard('03', 'SIRIUS',
-'Sports organization promoting healthy by creating sport tournaments.', Icons.groups),
-],
-);
-}
+  Widget _clubsContent() {
+    return Column(
+      children: [
+        _infoCard('01', 'Shadows',
+            'Dance ensemble created to popularize the culture and traditions of various dance styles.', Icons.groups),
+        _infoCard('02', 'OSIT ',
+            'Student organization dedicated to build a strong IT community.', Icons.code),
+        _infoCard('03', 'SIRIUS',
+            'Sports organization promoting healthy by creating sport tournaments.', Icons.groups),
+      ],
+    );
+  }
 
-Widget _campusContent() {
-return Column(
-children: [
-_infoCard('01', 'Main Campus', 'International IT University • Almaty, Kazakhstan',
-Icons.account_balance_outlined),
-_infoCard('02', 'Study Spaces',
-'Classrooms, computer laboratories and student study areas.',
-Icons.laptop_mac_outlined),
-_infoCard('03', 'Campus Services',
-'Library, student support and other university services.',
-Icons.location_city_outlined),
-],
-);
-}
+  Widget _campusContent() {
+    return Column(
+      children: [
+        _infoCard('01', 'Main Campus', 'International IT University • Almaty, Kazakhstan',
+            Icons.account_balance_outlined),
+        _infoCard('02', 'Study Spaces',
+            'Classrooms, computer laboratories and student study areas.',
+            Icons.laptop_mac_outlined),
+        _infoCard('03', 'Campus Services',
+            'Library, student support and other university services.',
+            Icons.location_city_outlined),
+      ],
+    );
+  }
 
-Widget _contactsContent() {
-return Column(
-children: [
-_infoCard('01', 'Student Support',
-'Contact the university student support team for campus-related questions.',
-Icons.support_agent),
-_infoCard('02', 'Campus Email', 'student@iitu.edu.kz',
-Icons.email_outlined),
-_infoCard('03', 'Location', 'Almaty, Kazakhstan',
-Icons.location_on_outlined),
-],
-);
-}
+  Widget _contactsContent() {
+    return Column(
+      children: [
+        _infoCard('01', 'Student Support',
+            'Contact the university student support team for campus-related questions.',
+            Icons.support_agent),
+        _infoCard('02', 'Campus Email', 'student@iitu.edu.kz',
+            Icons.email_outlined),
+        _infoCard('03', 'Location', 'Almaty, Kazakhstan',
+            Icons.location_on_outlined),
+      ],
+    );
+  }
 
-Widget _noticesContent() {
-return Column(
-children: [
-_infoCard('NEW', 'Academic Reminder',
-'Check your weekly schedule and university announcements regularly.',
-Icons.campaign_outlined),
-_infoCard('05 OCT', 'Cybersecurity Workshop',
-'Workshop starts at 14:00.', Icons.security_outlined),
-_infoCard('10 OCT', 'Student Life Fair',
-'Student Life Fair starts at 14:00.', Icons.groups_outlined),
-],
-);
-}
+  Widget _noticesContent() {
+    return Column(
+      children: [
+        _infoCard('NEW', 'Academic Reminder',
+            'Check your weekly schedule and university announcements regularly.',
+            Icons.campaign_outlined),
+        _infoCard('05 OCT', 'Cybersecurity Workshop',
+            'Workshop starts at 14:00.', Icons.security_outlined),
+        _infoCard('10 OCT', 'Student Life Fair',
+            'Student Life Fair starts at 14:00.', Icons.groups_outlined),
+      ],
+    );
+  }
 
-Widget _libraryContent() {
-return Column(
-children: [
-_infoCard('01', 'Learning Resources',
-'Access books and learning materials for your studies.',
-Icons.menu_book_outlined),
-_infoCard('02', 'Study Space',
-'Use university study areas for individual or group work.',
-Icons.chair_alt_outlined),
-],
-);
-}
+  Widget _libraryContent() {
+    return Column(
+      children: [
+        _infoCard('01', 'Learning Resources',
+            'Access books and learning materials for your studies.',
+            Icons.menu_book_outlined),
+        _infoCard('02', 'Study Space',
+            'Use university study areas for individual or group work.',
+            Icons.chair_alt_outlined),
+      ],
+    );
+  }
 
 
-Widget _scienceContent() {
-return Column(
-children: [
-_infoCard('01', 'Research & Science',
-'Explore scientific activity and research opportunities at the university.',
-Icons.science_outlined),
-_infoCard('02', 'Student Projects',
-'Discover opportunities to participate in academic and technology projects.',
-Icons.lightbulb_outline),
-],
-);
-}
+  Widget _scienceContent() {
+    return Column(
+      children: [
+        _infoCard('01', 'Research & Science',
+            'Explore scientific activity and research opportunities at the university.',
+            Icons.science_outlined),
+        _infoCard('02', 'Student Projects',
+            'Discover opportunities to participate in academic and technology projects.',
+            Icons.lightbulb_outline),
+      ],
+    );
+  }
 
-Widget _helpContent() {
-return Column(
-children: [
-_infoCard('01', 'Student Help',
-'Use Student Service Centre for university-related support.',
-Icons.help_outline),
-_infoCard('02', 'Technical Support',
-'Get assistance with campus digital services.',
-Icons.computer_outlined),
-],
-);
-}
+  Widget _helpContent() {
+    return Column(
+      children: [
+        _infoCard('01', 'Student Help',
+            'Use Student Service Centre for university-related support.',
+            Icons.help_outline),
+        _infoCard('02', 'Technical Support',
+            'Get assistance with campus digital services.',
+            Icons.computer_outlined),
+      ],
+    );
+  }
 
-Widget _infoCard(
-String label, String title, String description, IconData icon) {
-return Container(
-width: double.infinity,
-margin: const EdgeInsets.only(bottom: 12),
-padding: const EdgeInsets.all(22),
-color: Colors.white,
-child: Row(
-crossAxisAlignment: CrossAxisAlignment.start,
-children: [
-SizedBox(
-width: 64,
-child: Text(
-label,
-style: const TextStyle(
-color: iituRed,
-fontSize: 12,
-fontWeight: FontWeight.w900,
-),
-),
-),
-Icon(icon, size: 30, color: iituDark),
-const SizedBox(width: 18),
-Expanded(
-child: Column(
-crossAxisAlignment: CrossAxisAlignment.start,
-children: [
-Text(title,
-style: const TextStyle(
-fontSize: 19, fontWeight: FontWeight.w900)),
-const SizedBox(height: 7),
-Text(description,
-style: const TextStyle(
-color: Colors.black54, height: 1.45)),
-],
-),
-),
-const Icon(Icons.arrow_outward, size: 18, color: Colors.black38),
-],
-),
-);
-}
+  Widget _infoCard(
+      String label, String title, String description, IconData icon) {
+    return Container(
+      width: double.infinity,
+      margin: const EdgeInsets.only(bottom: 12),
+      padding: const EdgeInsets.all(22),
+      color: Colors.white,
+      child: Row(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          SizedBox(
+            width: 64,
+            child: Text(
+              label,
+              style: const TextStyle(
+                color: iituRed,
+                fontSize: 12,
+                fontWeight: FontWeight.w900,
+              ),
+            ),
+          ),
+          Icon(icon, size: 30, color: iituDark),
+          const SizedBox(width: 18),
+          Expanded(
+            child: Column(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                Text(title,
+                    style: const TextStyle(
+                        fontSize: 19, fontWeight: FontWeight.w900)),
+                const SizedBox(height: 7),
+                Text(description,
+                    style: const TextStyle(
+                        color: Colors.black54, height: 1.45)),
+              ],
+            ),
+          ),
+          const Icon(Icons.arrow_outward, size: 18, color: Colors.black38),
+        ],
+      ),
+    );
+  }
 }
 // Timetable is a separate route opened through Navigator.
 class TimetableScreen extends StatelessWidget {
-const TimetableScreen({super.key});
+  const TimetableScreen({super.key});
 
-@override
-Widget build(BuildContext context) {
-return Scaffold(
-backgroundColor: pageBg,
-appBar: AppBar(
-backgroundColor: iituRed,
-foregroundColor: Colors.white,
-title: const Text(
-'MY SCHEDULE',
-style: TextStyle(
-fontSize: 15,
-fontWeight: FontWeight.w900,
-letterSpacing: 1.2,
-),
-),
-),
-body: SingleChildScrollView(
-padding: const EdgeInsets.fromLTRB(20, 24, 20, 60),
-child: Center(
-child: ConstrainedBox(
-constraints: const BoxConstraints(maxWidth: 900),
-child: Column(
-crossAxisAlignment: CrossAxisAlignment.start,
-children: const [
-Text(
-'SCHEDULE',
-style: TextStyle(
-fontSize: 28,
-fontWeight: FontWeight.w900,
-letterSpacing: -.5,
-),
-),
-SizedBox(height: 6),
-Text(
-'Your classes for this week',
-style: TextStyle(color: Colors.black54),
-),
-SizedBox(height: 28),
+  @override
+  Widget build(BuildContext context) {
+    return Scaffold(
+      backgroundColor: pageBg,
+      appBar: AppBar(
+        backgroundColor: iituRed,
+        foregroundColor: Colors.white,
+        title: const Text(
+          'MY SCHEDULE',
+          style: TextStyle(
+            fontSize: 15,
+            fontWeight: FontWeight.w900,
+            letterSpacing: 1.2,
+          ),
+        ),
+      ),
+      body: SingleChildScrollView(
+        padding: const EdgeInsets.fromLTRB(20, 24, 20, 60),
+        child: Center(
+          child: ConstrainedBox(
+            constraints: const BoxConstraints(maxWidth: 900),
+            child: Column(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: const [
+                Text(
+                  'SCHEDULE',
+                  style: TextStyle(
+                    fontSize: 28,
+                    fontWeight: FontWeight.w900,
+                    letterSpacing: -.5,
+                  ),
+                ),
+                SizedBox(height: 6),
+                Text(
+                  'Your classes for this week',
+                  style: TextStyle(color: Colors.black54),
+                ),
+                SizedBox(height: 28),
 
-_RouteDay(
-day: 'MONDAY',
-subjects: [
-['Organization of Database Management Systems. L', '14:10 - 15:00', 'Bazarbekov I', 'Main 301'],
-['Authors Programs. L', '15:10 - 16:00', 'Shorokhov D', 'Main 604'],
-['Authors Programs. PS', '16:10 - 18:10', 'Shorokhov D', 'Main 207'],
-],
-),
+                _RouteDay(
+                  day: 'MONDAY',
+                  subjects: [
+                    ['Organization of Database Management Systems. L', '14:10 - 15:00', 'Bazarbekov I', 'Main 301'],
+                    ['Authors Programs. L', '15:10 - 16:00', 'Shorokhov D', 'Main 604'],
+                    ['Authors Programs. PS', '16:10 - 18:10', 'Shorokhov D', 'Main 207'],
+                  ],
+                ),
 
-_RouteDay(
-day: 'TUESDAY',
-subjects: [
-['Artificial Intelligence in Cybersecurity', '14:00 - 16:00', 'Akhmed G.Z', 'Main 607'],
-['Cryptographic Methods of Information Security', '16:10 - 18:00', 'V.V', 'Online'],
-],
-),
+                _RouteDay(
+                  day: 'TUESDAY',
+                  subjects: [
+                    ['Artificial Intelligence in Cybersecurity', '14:00 - 16:00', 'Akhmed G.Z', 'Main 607'],
+                    ['Cryptographic Methods of Information Security', '16:10 - 18:00', 'V.V', 'Online'],
+                  ],
+                ),
 
-_RouteDay(
-day: 'WEDNESDAY',
-subjects: [
-['Philosophy', '12:10 - 13:00', 'Batayeva S.A', 'Bayzak 216B'],
-],
-),
+                _RouteDay(
+                  day: 'WEDNESDAY',
+                  subjects: [
+                    ['Philosophy', '12:10 - 13:00', 'Batayeva S.A', 'Bayzak 216B'],
+                  ],
+                ),
 
-_RouteDay(
-day: 'THURSDAY',
-subjects: [
-['Organization and architecture of computing systems. L', '11:00 - 11:50', 'Pustovoi E', 'Bayzak 304B'],
-['Design Pattern. L', '12:10 - 13:00', 'V.V', 'Bayzak 216B'],
-],
-),
+                _RouteDay(
+                  day: 'THURSDAY',
+                  subjects: [
+                    ['Organization and architecture of computing systems. L', '11:00 - 11:50', 'Pustovoi E', 'Bayzak 304B'],
+                    ['Design Pattern. L', '12:10 - 13:00', 'V.V', 'Bayzak 216B'],
+                  ],
+                ),
 
-_RouteDay(
-day: 'FRIDAY',
-subjects: [
-['Cryptographic Methods of Information Security. L', '19:30 - 20:20', 'Ashraf O', 'Main 422'],
-['Philosophy', '20:30 - 21:20', 'Begalinov A', 'Online'],
-],
-),
-],
-),
-),
-),
-),
-);
-}
+                _RouteDay(
+                  day: 'FRIDAY',
+                  subjects: [
+                    ['Cryptographic Methods of Information Security. L', '19:30 - 20:20', 'Ashraf O', 'Main 422'],
+                    ['Philosophy', '20:30 - 21:20', 'Begalinov A', 'Online'],
+                  ],
+                ),
+              ],
+            ),
+          ),
+        ),
+      ),
+    );
+  }
 }
 class _RouteDay extends StatelessWidget {
-final String day;
-final List<List<String>> subjects;
+  final String day;
+  final List<List<String>> subjects;
 
-const _RouteDay({
-required this.day,
-required this.subjects,
-});
+  const _RouteDay({
+    required this.day,
+    required this.subjects,
+  });
 
-@override
-Widget build(BuildContext context) {
-return Padding(
-padding: const EdgeInsets.only(bottom: 26),
-child: Column(
-crossAxisAlignment: CrossAxisAlignment.start,
-children: [
-Text(
-day,
-style: const TextStyle(
-color: iituRed,
-fontWeight: FontWeight.w900,
-letterSpacing: 1.3,
-),
-),
-const SizedBox(height: 10),
-...subjects.map(
-(subject) => Container(
-width: double.infinity,
-margin: const EdgeInsets.only(bottom: 8),
-padding: const EdgeInsets.all(18),
-decoration: const BoxDecoration(
-color: Colors.white,
-border: Border(
-left: BorderSide(color: iituRed, width: 4),
-),
-),
-child: Row(
-crossAxisAlignment: CrossAxisAlignment.start,
-children: [
-SizedBox(
-width: 120,
-child: Text(
-subject[1],
-style: const TextStyle(
-fontWeight: FontWeight.w800,
-color: iituRed,
-),
-),
-),
-Expanded(
-child: Column(
-crossAxisAlignment: CrossAxisAlignment.start,
-children: [
-Text(
-subject[0],
-style: const TextStyle(
-fontSize: 16,
-fontWeight: FontWeight.w800,
-),
-),
-const SizedBox(height: 7),
-Text(
-'${subject[2]}  •  ${subject[3]}',
-style: const TextStyle(color: Colors.black54),
-),
-],
-),
-),
-],
-),
-),
-),
-],
-),
-);
-}
+  @override
+  Widget build(BuildContext context) {
+    return Padding(
+      padding: const EdgeInsets.only(bottom: 26),
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          Text(
+            day,
+            style: const TextStyle(
+              color: iituRed,
+              fontWeight: FontWeight.w900,
+              letterSpacing: 1.3,
+            ),
+          ),
+          const SizedBox(height: 10),
+          ...subjects.map(
+                (subject) => Container(
+              width: double.infinity,
+              margin: const EdgeInsets.only(bottom: 8),
+              padding: const EdgeInsets.all(18),
+              decoration: const BoxDecoration(
+                color: Colors.white,
+                border: Border(
+                  left: BorderSide(color: iituRed, width: 4),
+                ),
+              ),
+              child: Row(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: [
+                  SizedBox(
+                    width: 120,
+                    child: Text(
+                      subject[1],
+                      style: const TextStyle(
+                        fontWeight: FontWeight.w800,
+                        color: iituRed,
+                      ),
+                    ),
+                  ),
+                  Expanded(
+                    child: Column(
+                      crossAxisAlignment: CrossAxisAlignment.start,
+                      children: [
+                        Text(
+                          subject[0],
+                          style: const TextStyle(
+                            fontSize: 16,
+                            fontWeight: FontWeight.w800,
+                          ),
+                        ),
+                        const SizedBox(height: 7),
+                        Text(
+                          '${subject[2]}  •  ${subject[3]}',
+                          style: const TextStyle(color: Colors.black54),
+                        ),
+                      ],
+                    ),
+                  ),
+                ],
+              ),
+            ),
+          ),
+        ],
+      ),
+    );
+  }
 }
 // Stores information about one campus service.
 class CampusService {
-final String name;
-final String description;
-final String location;
-final String hours;
-final String contact;
+  final String name;
+  final String description;
+  final String location;
+  final String hours;
+  final String contact;
 
-const CampusService({
-required this.name,
-required this.description,
-required this.location,
-required this.hours,
-required this.contact,
-});
+  const CampusService({
+    required this.name,
+    required this.description,
+    required this.location,
+    required this.hours,
+    required this.contact,
+  });
 }
 // Fallback screen for an unknown or incorrect route.
 class UnknownRouteScreen extends StatelessWidget {
-final String routeName;
+  final String routeName;
 
-const UnknownRouteScreen({
-super.key,
-required this.routeName,
-});
+  const UnknownRouteScreen({
+    super.key,
+    required this.routeName,
+  });
 
-@override
-Widget build(BuildContext context) {
-return Scaffold(
-backgroundColor: pageBg,
-appBar: AppBar(
-backgroundColor: iituRed,
-foregroundColor: Colors.white,
-title: const Text(
-'PAGE NOT FOUND',
-style: TextStyle(
-fontSize: 15,
-fontWeight: FontWeight.w900,
-letterSpacing: 1.2,
-),
-),
-),
-body: Center(
-child: Padding(
-padding: const EdgeInsets.all(24),
-child: Column(
-mainAxisSize: MainAxisSize.min,
-children: [
-const Icon(
-Icons.error_outline,
-size: 80,
-color: iituRed,
-),
-const SizedBox(height: 20),
-const Text(
-'404',
-style: TextStyle(
-fontSize: 42,
-fontWeight: FontWeight.w900,
-),
-),
-const SizedBox(height: 8),
-const Text(
-'Page not found',
-style: TextStyle(
-fontSize: 22,
-fontWeight: FontWeight.w800,
-),
-),
-const SizedBox(height: 10),
-Text(
-'Unknown route: $routeName',
-textAlign: TextAlign.center,
-style: const TextStyle(
-color: Colors.black54,
-),
-),
-const SizedBox(height: 28),
-ElevatedButton.icon(
-onPressed: () {
-Navigator.pop(context);
-},
-icon: const Icon(Icons.arrow_back),
-label: const Text('GO BACK'),
-style: ElevatedButton.styleFrom(
-backgroundColor: iituRed,
-foregroundColor: Colors.white,
-padding: const EdgeInsets.symmetric(
-horizontal: 24,
-vertical: 14,
-),
-),
-),
-],
-),
-),
-),
-);
-}
+  @override
+  Widget build(BuildContext context) {
+    return Scaffold(
+      backgroundColor: pageBg,
+      appBar: AppBar(
+        backgroundColor: iituRed,
+        foregroundColor: Colors.white,
+        title: const Text(
+          'PAGE NOT FOUND',
+          style: TextStyle(
+            fontSize: 15,
+            fontWeight: FontWeight.w900,
+            letterSpacing: 1.2,
+          ),
+        ),
+      ),
+      body: Center(
+        child: Padding(
+          padding: const EdgeInsets.all(24),
+          child: Column(
+            mainAxisSize: MainAxisSize.min,
+            children: [
+              const Icon(
+                Icons.error_outline,
+                size: 80,
+                color: iituRed,
+              ),
+              const SizedBox(height: 20),
+              const Text(
+                '404',
+                style: TextStyle(
+                  fontSize: 42,
+                  fontWeight: FontWeight.w900,
+                ),
+              ),
+              const SizedBox(height: 8),
+              const Text(
+                'Page not found',
+                style: TextStyle(
+                  fontSize: 22,
+                  fontWeight: FontWeight.w800,
+                ),
+              ),
+              const SizedBox(height: 10),
+              Text(
+                'Unknown route: $routeName',
+                textAlign: TextAlign.center,
+                style: const TextStyle(
+                  color: Colors.black54,
+                ),
+              ),
+              const SizedBox(height: 28),
+              ElevatedButton.icon(
+                onPressed: () {
+                  Navigator.pop(context);
+                },
+                icon: const Icon(Icons.arrow_back),
+                label: const Text('GO BACK'),
+                style: ElevatedButton.styleFrom(
+                  backgroundColor: iituRed,
+                  foregroundColor: Colors.white,
+                  padding: const EdgeInsets.symmetric(
+                    horizontal: 24,
+                    vertical: 14,
+                  ),
+                ),
+              ),
+            ],
+          ),
+        ),
+      ),
+    );
+  }
 }
 // Student Profile is a separate named route.
 class StudentProfileScreen extends StatelessWidget {
-const StudentProfileScreen({super.key});
+  const StudentProfileScreen({super.key});
 
-@override
-Widget build(BuildContext context) {
-return Scaffold(
-backgroundColor: pageBg,
-appBar: AppBar(
-backgroundColor: iituRed,
-foregroundColor: Colors.white,
-title: const Text(
-'STUDENT PROFILE',
-style: TextStyle(
-fontSize: 15,
-fontWeight: FontWeight.w900,
-letterSpacing: 1.2,
-),
-),
-),
-body: SingleChildScrollView(
-padding: const EdgeInsets.fromLTRB(20, 30, 20, 60),
-child: Center(
-child: ConstrainedBox(
-constraints: const BoxConstraints(maxWidth: 700),
-child: Column(
-children: [
-const CircleAvatar(
-radius: 48,
-backgroundColor: iituRed,
-child: Icon(
-Icons.person_outline,
-size: 50,
-color: Colors.white,
-),
-),
-const SizedBox(height: 16),
+  @override
+  Widget build(BuildContext context) {
+    return Scaffold(
+      backgroundColor: pageBg,
+      appBar: AppBar(
+        backgroundColor: iituRed,
+        foregroundColor: Colors.white,
+        title: const Text(
+          'STUDENT PROFILE',
+          style: TextStyle(
+            fontSize: 15,
+            fontWeight: FontWeight.w900,
+            letterSpacing: 1.2,
+          ),
+        ),
+      ),
+      body: SingleChildScrollView(
+        padding: const EdgeInsets.fromLTRB(20, 30, 20, 60),
+        child: Center(
+          child: ConstrainedBox(
+            constraints: const BoxConstraints(maxWidth: 700),
+            child: Column(
+              children: [
+                const CircleAvatar(
+                  radius: 48,
+                  backgroundColor: iituRed,
+                  child: Icon(
+                    Icons.person_outline,
+                    size: 50,
+                    color: Colors.white,
+                  ),
+                ),
+                const SizedBox(height: 16),
 
-const Text(
-'Student Profile',
-style: TextStyle(
-fontSize: 26,
-fontWeight: FontWeight.w900,
-),
-),
-const SizedBox(height: 6),
+                const Text(
+                  'Student Profile',
+                  style: TextStyle(
+                    fontSize: 26,
+                    fontWeight: FontWeight.w900,
+                  ),
+                ),
+                const SizedBox(height: 6),
 
-const Text(
-'International IT University',
-style: TextStyle(
-color: Colors.black54,
-),
-),
-const SizedBox(height: 30),
+                const Text(
+                  'International IT University',
+                  style: TextStyle(
+                    color: Colors.black54,
+                  ),
+                ),
+                const SizedBox(height: 30),
 
-_profileInfo(
-Icons.badge_outlined,
-'Student ID',
-'Student Account',
-),
-_profileInfo(
-Icons.school_outlined,
-'Programme',
-'Computer Security',
-),
-_profileInfo(
-Icons.email_outlined,
-'Email',
-'student@iitu.edu.kz',
-),
-_profileInfo(
-Icons.location_city_outlined,
-'University',
-'International IT University',
-),
-],
-),
-),
-),
-),
-);
-}
+                _profileInfo(
+                  Icons.badge_outlined,
+                  'Student ID',
+                  'Student Account',
+                ),
+                _profileInfo(
+                  Icons.school_outlined,
+                  'Programme',
+                  'Computer Security',
+                ),
+                _profileInfo(
+                  Icons.email_outlined,
+                  'Email',
+                  'student@iitu.edu.kz',
+                ),
+                _profileInfo(
+                  Icons.location_city_outlined,
+                  'University',
+                  'International IT University',
+                ),
+              ],
+            ),
+          ),
+        ),
+      ),
+    );
+  }
 
-Widget _profileInfo(
-IconData icon,
-String title,
-String value,
-) {
-return Container(
-width: double.infinity,
-margin: const EdgeInsets.only(bottom: 10),
-padding: const EdgeInsets.all(18),
-color: Colors.white,
-child: Row(
-children: [
-Icon(icon, color: iituRed),
-const SizedBox(width: 16),
-Expanded(
-child: Column(
-crossAxisAlignment: CrossAxisAlignment.start,
-children: [
-Text(
-title,
-style: const TextStyle(
-fontSize: 12,
-color: Colors.black54,
-),
-),
-const SizedBox(height: 4),
-Text(
-value,
-style: const TextStyle(
-fontWeight: FontWeight.w800,
-),
-),
-],
-),
-),
-],
-),
-);
-}
+  Widget _profileInfo(
+      IconData icon,
+      String title,
+      String value,
+      ) {
+    return Container(
+      width: double.infinity,
+      margin: const EdgeInsets.only(bottom: 10),
+      padding: const EdgeInsets.all(18),
+      color: Colors.white,
+      child: Row(
+        children: [
+          Icon(icon, color: iituRed),
+          const SizedBox(width: 16),
+          Expanded(
+            child: Column(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                Text(
+                  title,
+                  style: const TextStyle(
+                    fontSize: 12,
+                    color: Colors.black54,
+                  ),
+                ),
+                const SizedBox(height: 4),
+                Text(
+                  value,
+                  style: const TextStyle(
+                    fontWeight: FontWeight.w800,
+                  ),
+                ),
+              ],
+            ),
+          ),
+        ],
+      ),
+    );
+  }
 }
 // Stores information about one campus event.
 class CampusEvent {
-final String title;
-final String date;
-final String time;
-final String location;
-final String description;
+  final String title;
+  final String date;
+  final String time;
+  final String location;
+  final String description;
 
-const CampusEvent({
-required this.title,
-required this.date,
-required this.time,
-required this.location,
-required this.description,
-});
+  const CampusEvent({
+    required this.title,
+    required this.date,
+    required this.time,
+    required this.location,
+    required this.description,
+  });
 }
 // Campus Events is a separate named route.
 class CampusEventsScreen extends StatelessWidget {
-const CampusEventsScreen({super.key});
+  const CampusEventsScreen({super.key});
 
-@override
-Widget build(BuildContext context) {
-return Scaffold(
-backgroundColor: pageBg,
-appBar: AppBar(
-backgroundColor: iituRed,
-foregroundColor: Colors.white,
-title: const Text(
-'CAMPUS EVENTS',
-style: TextStyle(
-fontSize: 15,
-fontWeight: FontWeight.w900,
-letterSpacing: 1.2,
-),
-),
-),
-body: ListView(
-padding: const EdgeInsets.fromLTRB(20, 24, 20, 60),
-children: const [
-Text(
-'UPCOMING EVENTS',
-style: TextStyle(
-fontSize: 28,
-fontWeight: FontWeight.w900,
-),
-),
-SizedBox(height: 6),
-Text(
-'Discover what is happening around campus.',
-style: TextStyle(color: Colors.black54),
-),
-SizedBox(height: 25),
+  @override
+  Widget build(BuildContext context) {
+    return Scaffold(
+      backgroundColor: pageBg,
+      appBar: AppBar(
+        backgroundColor: iituRed,
+        foregroundColor: Colors.white,
+        title: const Text(
+          'CAMPUS EVENTS',
+          style: TextStyle(
+            fontSize: 15,
+            fontWeight: FontWeight.w900,
+            letterSpacing: 1.2,
+          ),
+        ),
+      ),
+      body: ListView(
+        padding: const EdgeInsets.fromLTRB(20, 24, 20, 60),
+        children: const [
+          Text(
+            'UPCOMING EVENTS',
+            style: TextStyle(
+              fontSize: 28,
+              fontWeight: FontWeight.w900,
+            ),
+          ),
+          SizedBox(height: 6),
+          Text(
+            'Discover what is happening around campus.',
+            style: TextStyle(color: Colors.black54),
+          ),
+          SizedBox(height: 25),
 
-_CampusEventCard(
-date: '10 OCT',
-title: 'Student Club Fair',
-location: 'Main Hall',
-time: '12:00 - 15:00',
-event: CampusEvent(
-title: 'Student Club Fair',
-date: '10 OCT',
-time: '12:00 - 15:00',
-location: 'Main Hall',
-description:
-'Meet student clubs, discover campus activities and find new opportunities to participate in university life.',
-),
-),
+          _CampusEventCard(
+            date: '10 OCT',
+            title: 'Student Club Fair',
+            location: 'Main Hall',
+            time: '12:00 - 15:00',
+            event: CampusEvent(
+              title: 'Student Club Fair',
+              date: '10 OCT',
+              time: '12:00 - 15:00',
+              location: 'Main Hall',
+              description:
+              'Meet student clubs, discover campus activities and find new opportunities to participate in university life.',
+            ),
+          ),
 
-_CampusEventCard(
-date: '15 OCT',
-title: 'Cybersecurity Workshop',
-location: 'Computer Lab',
-time: '14:00 - 16:00',
-event: CampusEvent(
-title: 'Cybersecurity Workshop',
-date: '15 OCT',
-time: '14:00 - 16:00',
-location: 'Computer Lab',
-description:
-'A practical workshop where students can learn more about cybersecurity concepts, tools and current security challenges.',
-),
-),
+          _CampusEventCard(
+            date: '15 OCT',
+            title: 'Cybersecurity Workshop',
+            location: 'Computer Lab',
+            time: '14:00 - 16:00',
+            event: CampusEvent(
+              title: 'Cybersecurity Workshop',
+              date: '15 OCT',
+              time: '14:00 - 16:00',
+              location: 'Computer Lab',
+              description:
+              'A practical workshop where students can learn more about cybersecurity concepts, tools and current security challenges.',
+            ),
+          ),
 
-_CampusEventCard(
-date: '22 OCT',
-title: 'University Sports Day',
-location: 'Sports Centre',
-time: '10:00 - 17:00',
-event: CampusEvent(
-title: 'Sirius Day',
-date: '22 OCT',
-time: '10:00 - 17:00',
-location: 'Sports Centre',
-description:
-'A university sports event with activities, competitions and opportunities for students to spend time together.',
-),
-),
-],
-),
-);
-}
+          _CampusEventCard(
+            date: '22 OCT',
+            title: 'University Sports Day',
+            location: 'Sports Centre',
+            time: '10:00 - 17:00',
+            event: CampusEvent(
+              title: 'Sirius Day',
+              date: '22 OCT',
+              time: '10:00 - 17:00',
+              location: 'Sports Centre',
+              description:
+              'A university sports event with activities, competitions and opportunities for students to spend time together.',
+            ),
+          ),
+        ],
+      ),
+    );
+  }
 }
 // Displays full information about the selected campus event.
 class EventDetailScreen extends StatelessWidget {
-final CampusEvent event;
+  final CampusEvent event;
 
-const EventDetailScreen({
-super.key,
-required this.event,
-});
+  const EventDetailScreen({
+    super.key,
+    required this.event,
+  });
 
-@override
-Widget build(BuildContext context) {
-return Scaffold(
-backgroundColor: pageBg,
-appBar: AppBar(
-backgroundColor: iituRed,
-foregroundColor: Colors.white,
-title: const Text(
-'EVENT DETAILS',
-style: TextStyle(
-fontSize: 15,
-fontWeight: FontWeight.w900,
-letterSpacing: 1.2,
-),
-),
-),
-body: SingleChildScrollView(
-padding: const EdgeInsets.all(20),
-child: Column(
-crossAxisAlignment: CrossAxisAlignment.start,
-children: [
-Text(
-event.date,
-style: const TextStyle(
-color: iituRed,
-fontWeight: FontWeight.w900,
-letterSpacing: 1.2,
-),
-),
-const SizedBox(height: 10),
+  @override
+  Widget build(BuildContext context) {
+    return Scaffold(
+      backgroundColor: pageBg,
+      appBar: AppBar(
+        backgroundColor: iituRed,
+        foregroundColor: Colors.white,
+        title: const Text(
+          'EVENT DETAILS',
+          style: TextStyle(
+            fontSize: 15,
+            fontWeight: FontWeight.w900,
+            letterSpacing: 1.2,
+          ),
+        ),
+      ),
+      body: SingleChildScrollView(
+        padding: const EdgeInsets.all(20),
+        child: Column(
+          crossAxisAlignment: CrossAxisAlignment.start,
+          children: [
+            Text(
+              event.date,
+              style: const TextStyle(
+                color: iituRed,
+                fontWeight: FontWeight.w900,
+                letterSpacing: 1.2,
+              ),
+            ),
+            const SizedBox(height: 10),
 
-Text(
-event.title,
-style: const TextStyle(
-fontSize: 28,
-fontWeight: FontWeight.w900,
-),
-),
-const SizedBox(height: 24),
+            Text(
+              event.title,
+              style: const TextStyle(
+                fontSize: 28,
+                fontWeight: FontWeight.w900,
+              ),
+            ),
+            const SizedBox(height: 24),
 
-_eventInfo(
-Icons.access_time,
-'Time',
-event.time,
-),
-_eventInfo(
-Icons.location_on_outlined,
-'Location',
-event.location,
-),
+            _eventInfo(
+              Icons.access_time,
+              'Time',
+              event.time,
+            ),
+            _eventInfo(
+              Icons.location_on_outlined,
+              'Location',
+              event.location,
+            ),
 
-const SizedBox(height: 22),
+            const SizedBox(height: 22),
 
-const Text(
-'ABOUT THIS EVENT',
-style: TextStyle(
-fontSize: 13,
-fontWeight: FontWeight.w900,
-letterSpacing: 1.1,
-),
-),
-const SizedBox(height: 10),
+            const Text(
+              'ABOUT THIS EVENT',
+              style: TextStyle(
+                fontSize: 13,
+                fontWeight: FontWeight.w900,
+                letterSpacing: 1.1,
+              ),
+            ),
+            const SizedBox(height: 10),
 
-Text(
-event.description,
-style: const TextStyle(
-fontSize: 16,
-height: 1.5,
-color: Colors.black54,
-),
-),
-],
-),
-),
-);
-}
+            Text(
+              event.description,
+              style: const TextStyle(
+                fontSize: 16,
+                height: 1.5,
+                color: Colors.black54,
+              ),
+            ),
+          ],
+        ),
+      ),
+    );
+  }
 
-Widget _eventInfo(
-IconData icon,
-String title,
-String value,
-) {
-return Container(
-width: double.infinity,
-margin: const EdgeInsets.only(bottom: 10),
-padding: const EdgeInsets.all(16),
-color: Colors.white,
-child: Row(
-children: [
-Icon(icon, color: iituRed),
-const SizedBox(width: 14),
-Column(
-crossAxisAlignment: CrossAxisAlignment.start,
-children: [
-Text(
-title,
-style: const TextStyle(
-fontSize: 12,
-color: Colors.black54,
-),
-),
-const SizedBox(height: 3),
-Text(
-value,
-style: const TextStyle(
-fontWeight: FontWeight.w700,
-),
-),
-],
-),
-],
-),
-);
-}
+  Widget _eventInfo(
+      IconData icon,
+      String title,
+      String value,
+      ) {
+    return Container(
+      width: double.infinity,
+      margin: const EdgeInsets.only(bottom: 10),
+      padding: const EdgeInsets.all(16),
+      color: Colors.white,
+      child: Row(
+        children: [
+          Icon(icon, color: iituRed),
+          const SizedBox(width: 14),
+          Column(
+            crossAxisAlignment: CrossAxisAlignment.start,
+            children: [
+              Text(
+                title,
+                style: const TextStyle(
+                  fontSize: 12,
+                  color: Colors.black54,
+                ),
+              ),
+              const SizedBox(height: 3),
+              Text(
+                value,
+                style: const TextStyle(
+                  fontWeight: FontWeight.w700,
+                ),
+              ),
+            ],
+          ),
+        ],
+      ),
+    );
+  }
 }
 class _CampusEventCard extends StatelessWidget {
-final String date;
-final String title;
-final String location;
-final String time;
-final CampusEvent event;
+  final String date;
+  final String title;
+  final String location;
+  final String time;
+  final CampusEvent event;
 
-const _CampusEventCard({
-required this.date,
-required this.title,
-required this.location,
-required this.time,
-required this.event,
-});
+  const _CampusEventCard({
+    required this.date,
+    required this.title,
+    required this.location,
+    required this.time,
+    required this.event,
+  });
 
-@override
-Widget build(BuildContext context) {
-return InkWell(
-onTap: () {
+  @override
+  Widget build(BuildContext context) {
+    return InkWell(
+      onTap: () {
 // Opens event details using a direct MaterialPageRoute.
-Navigator.push(
-context,
-MaterialPageRoute(
-builder: (context) => EventDetailScreen(event: event),
-),
-);
-},
-child: Container(
-margin: const EdgeInsets.only(bottom: 12),
-padding: const EdgeInsets.all(18),
-color: Colors.white,
-child: Row(
-children: [
-Container(
-width: 62,
-height: 62,
-alignment: Alignment.center,
-color: iituRed,
-child: Text(
-date,
-textAlign: TextAlign.center,
-style: const TextStyle(
-color: Colors.white,
-fontWeight: FontWeight.w900,
-),
-),
-),
-const SizedBox(width: 16),
-Expanded(
-child: Column(
-crossAxisAlignment: CrossAxisAlignment.start,
-children: [
-Text(
-title,
-style: const TextStyle(
-fontSize: 16,
-fontWeight: FontWeight.w800,
-),
-),
-const SizedBox(height: 7),
-Text(
-'$time  •  $location',
-style: const TextStyle(
-color: Colors.black54,
-),
-),
-],
-),
-),
-],
-),
-),
-);
-}
+        Navigator.push(
+          context,
+          MaterialPageRoute(
+            builder: (context) => EventDetailScreen(event: event),
+          ),
+        );
+      },
+      child: Container(
+        margin: const EdgeInsets.only(bottom: 12),
+        padding: const EdgeInsets.all(18),
+        color: Colors.white,
+        child: Row(
+          children: [
+            Container(
+              width: 62,
+              height: 62,
+              alignment: Alignment.center,
+              color: iituRed,
+              child: Text(
+                date,
+                textAlign: TextAlign.center,
+                style: const TextStyle(
+                  color: Colors.white,
+                  fontWeight: FontWeight.w900,
+                ),
+              ),
+            ),
+            const SizedBox(width: 16),
+            Expanded(
+              child: Column(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: [
+                  Text(
+                    title,
+                    style: const TextStyle(
+                      fontSize: 16,
+                      fontWeight: FontWeight.w800,
+                    ),
+                  ),
+                  const SizedBox(height: 7),
+                  Text(
+                    '$time  •  $location',
+                    style: const TextStyle(
+                      color: Colors.black54,
+                    ),
+                  ),
+                ],
+              ),
+            ),
+          ],
+        ),
+      ),
+    );
+  }
 }
 // Campus Services is a separate named route.
 class CampusServicesScreen extends StatelessWidget {
-const CampusServicesScreen({super.key});
+  const CampusServicesScreen({super.key});
 
-@override
-Widget build(BuildContext context) {
-return Scaffold(
-backgroundColor: pageBg,
-appBar: AppBar(
-backgroundColor: iituRed,
-foregroundColor: Colors.white,
-title: const Text(
-'CAMPUS SERVICES',
-style: TextStyle(
-fontSize: 15,
-fontWeight: FontWeight.w900,
-letterSpacing: 1.2,
-),
-),
-),
-body: ListView(
-padding: const EdgeInsets.all(20),
-children: const [
-Text(
-'STUDENT SERVICES',
-style: TextStyle(
-fontSize: 28,
-fontWeight: FontWeight.w900,
-),
-),
-SizedBox(height: 6),
-Text(
-'Select a service to view more information.',
-style: TextStyle(color: Colors.black54),
-),
-SizedBox(height: 25),
+  @override
+  Widget build(BuildContext context) {
+    return Scaffold(
+      backgroundColor: pageBg,
+      appBar: AppBar(
+        backgroundColor: iituRed,
+        foregroundColor: Colors.white,
+        title: const Text(
+          'CAMPUS SERVICES',
+          style: TextStyle(
+            fontSize: 15,
+            fontWeight: FontWeight.w900,
+            letterSpacing: 1.2,
+          ),
+        ),
+      ),
+      body: ListView(
+        padding: const EdgeInsets.all(20),
+        children: const [
+          Text(
+            'STUDENT SERVICES',
+            style: TextStyle(
+              fontSize: 28,
+              fontWeight: FontWeight.w900,
+            ),
+          ),
+          SizedBox(height: 6),
+          Text(
+            'Select a service to view more information.',
+            style: TextStyle(color: Colors.black54),
+          ),
+          SizedBox(height: 25),
 
-_CampusServiceTile(
-icon: Icons.computer_outlined,
-title: 'IT Support',
-subtitle: 'Technical and campus system support',
-service: CampusService(
-name: 'IT Support',
-description:
-'Provides technical support for university systems, student accounts, Wi-Fi and other IT-related issues.',
-location: 'Main Building, Room 105',
-hours: 'Monday - Friday, 09:00 - 18:00',
-contact: 'support@iitu.edu.kz',
-),
-),
+          _CampusServiceTile(
+            icon: Icons.computer_outlined,
+            title: 'IT Support',
+            subtitle: 'Technical and campus system support',
+            service: CampusService(
+              name: 'IT Support',
+              description:
+              'Provides technical support for university systems, student accounts, Wi-Fi and other IT-related issues.',
+              location: 'Main Building, Room 105',
+              hours: 'Monday - Friday, 09:00 - 18:00',
+              contact: 'support@iitu.edu.kz',
+            ),
+          ),
 
-_CampusServiceTile(
-icon: Icons.school_outlined,
-title: 'Academic Support',
-subtitle: 'Help with academic and study-related questions',
-service: CampusService(
-name: 'Academic Support',
-description:
-'Provides support for students with academic questions, study planning and university learning processes.',
-location: 'Main Building, Room 203',
-hours: 'Monday - Friday, 09:00 - 17:00',
-contact: 'academic@iitu.edu.kz',
-),
-),
+          _CampusServiceTile(
+            icon: Icons.school_outlined,
+            title: 'Academic Support',
+            subtitle: 'Help with academic and study-related questions',
+            service: CampusService(
+              name: 'Academic Support',
+              description:
+              'Provides support for students with academic questions, study planning and university learning processes.',
+              location: 'Main Building, Room 203',
+              hours: 'Monday - Friday, 09:00 - 17:00',
+              contact: 'academic@iitu.edu.kz',
+            ),
+          ),
 
-_CampusServiceTile(
-icon: Icons.local_library_outlined,
-title: 'Library Services',
-subtitle: 'Books, learning resources and study spaces',
-service: CampusService(
-name: 'Library Services',
-description:
-'Provides access to books, digital learning resources and study spaces for students.',
-location: 'Main Building, Library',
-hours: 'Monday - Saturday, 08:00 - 20:00',
-contact: 'library@iitu.edu.kz',
-),
-),
+          _CampusServiceTile(
+            icon: Icons.local_library_outlined,
+            title: 'Library Services',
+            subtitle: 'Books, learning resources and study spaces',
+            service: CampusService(
+              name: 'Library Services',
+              description:
+              'Provides access to books, digital learning resources and study spaces for students.',
+              location: 'Main Building, Library',
+              hours: 'Monday - Saturday, 08:00 - 20:00',
+              contact: 'library@iitu.edu.kz',
+            ),
+          ),
 
-_CampusServiceTile(
-icon: Icons.groups_outlined,
-title: 'Student Affairs',
-subtitle: 'Student activities and campus support',
-service: CampusService(
-name: 'Student Affairs',
-description:
-'Supports students with campus activities, student organisations and general university life.',
-location: 'Main Building, Room 110',
-hours: 'Monday - Friday, 09:00 - 18:00',
-contact: 'studentaffairs@iitu.edu.kz',
-),
-),
-],
-),
-);
-}
+          _CampusServiceTile(
+            icon: Icons.groups_outlined,
+            title: 'Student Affairs',
+            subtitle: 'Student activities and campus support',
+            service: CampusService(
+              name: 'Student Affairs',
+              description:
+              'Supports students with campus activities, student organisations and general university life.',
+              location: 'Main Building, Room 110',
+              hours: 'Monday - Friday, 09:00 - 18:00',
+              contact: 'studentaffairs@iitu.edu.kz',
+            ),
+          ),
+        ],
+      ),
+    );
+  }
 }
 
 // Shows full information about the selected campus service.
 class ServiceDetailScreen extends StatelessWidget {
-final CampusService service;
+  final CampusService service;
 
-const ServiceDetailScreen({
-super.key,
-required this.service,
-});
+  const ServiceDetailScreen({
+    super.key,
+    required this.service,
+  });
 
-@override
-Widget build(BuildContext context) {
-return Scaffold(
-backgroundColor: pageBg,
-appBar: AppBar(
-backgroundColor: iituRed,
-foregroundColor: Colors.white,
-title: const Text(
-'SERVICE DETAILS',
-style: TextStyle(
-fontSize: 15,
-fontWeight: FontWeight.w900,
-letterSpacing: 1.2,
-),
-),
-),
-body: SingleChildScrollView(
-padding: const EdgeInsets.all(20),
-child: Column(
-crossAxisAlignment: CrossAxisAlignment.start,
-children: [
-Text(
-service.name,
-style: const TextStyle(
-fontSize: 28,
-fontWeight: FontWeight.w900,
-),
-),
-const SizedBox(height: 12),
+  @override
+  Widget build(BuildContext context) {
+    return Scaffold(
+      backgroundColor: pageBg,
+      appBar: AppBar(
+        backgroundColor: iituRed,
+        foregroundColor: Colors.white,
+        title: const Text(
+          'SERVICE DETAILS',
+          style: TextStyle(
+            fontSize: 15,
+            fontWeight: FontWeight.w900,
+            letterSpacing: 1.2,
+          ),
+        ),
+      ),
+      body: SingleChildScrollView(
+        padding: const EdgeInsets.all(20),
+        child: Column(
+          crossAxisAlignment: CrossAxisAlignment.start,
+          children: [
+            Text(
+              service.name,
+              style: const TextStyle(
+                fontSize: 28,
+                fontWeight: FontWeight.w900,
+              ),
+            ),
+            const SizedBox(height: 12),
 
-Text(
-service.description,
-style: const TextStyle(
-fontSize: 16,
-height: 1.5,
-color: Colors.black54,
-),
-),
-const SizedBox(height: 28),
+            Text(
+              service.description,
+              style: const TextStyle(
+                fontSize: 16,
+                height: 1.5,
+                color: Colors.black54,
+              ),
+            ),
+            const SizedBox(height: 28),
 
-_detailRow(
-Icons.location_on_outlined,
-'Location',
-service.location,
-),
-_detailRow(
-Icons.access_time,
-'Opening Hours',
-service.hours,
-),
-_detailRow(
-Icons.contact_support_outlined,
-'Contact',
-service.contact,
-),
+            _detailRow(
+              Icons.location_on_outlined,
+              'Location',
+              service.location,
+            ),
+            _detailRow(
+              Icons.access_time,
+              'Opening Hours',
+              service.hours,
+            ),
+            _detailRow(
+              Icons.contact_support_outlined,
+              'Contact',
+              service.contact,
+            ),
 
-const SizedBox(height: 30),
+            const SizedBox(height: 30),
 
-SizedBox(
-width: double.infinity,
-child: ElevatedButton.icon(
-onPressed: () {
+            SizedBox(
+              width: double.infinity,
+              child: ElevatedButton.icon(
+                onPressed: () {
 // Returns a result to the previous screen after the service request.
-Navigator.pop(context, 'requested');
-},
-icon: const Icon(Icons.check_circle_outline),
-label: const Text('REQUEST SERVICE'),
-style: ElevatedButton.styleFrom(
-backgroundColor: iituRed,
-foregroundColor: Colors.white,
-padding: const EdgeInsets.symmetric(vertical: 16),
-),
-),
-),
-],
-),
-),
-);
-}
+                  Navigator.pop(context, 'requested');
+                },
+                icon: const Icon(Icons.check_circle_outline),
+                label: const Text('REQUEST SERVICE'),
+                style: ElevatedButton.styleFrom(
+                  backgroundColor: iituRed,
+                  foregroundColor: Colors.white,
+                  padding: const EdgeInsets.symmetric(vertical: 16),
+                ),
+              ),
+            ),
+          ],
+        ),
+      ),
+    );
+  }
 
-Widget _detailRow(
-IconData icon,
-String title,
-String value,
-) {
-return Container(
-width: double.infinity,
-margin: const EdgeInsets.only(bottom: 10),
-padding: const EdgeInsets.all(16),
-color: Colors.white,
-child: Row(
-children: [
-Icon(icon, color: iituRed),
-const SizedBox(width: 14),
-Expanded(
-child: Column(
-crossAxisAlignment: CrossAxisAlignment.start,
-children: [
-Text(
-title,
-style: const TextStyle(
-fontSize: 12,
-color: Colors.black54,
-),
-),
-const SizedBox(height: 3),
-Text(
-value,
-style: const TextStyle(
-fontWeight: FontWeight.w700,
-),
-),
-],
-),
-),
-],
-),
-);
-}
+  Widget _detailRow(
+      IconData icon,
+      String title,
+      String value,
+      ) {
+    return Container(
+      width: double.infinity,
+      margin: const EdgeInsets.only(bottom: 10),
+      padding: const EdgeInsets.all(16),
+      color: Colors.white,
+      child: Row(
+        children: [
+          Icon(icon, color: iituRed),
+          const SizedBox(width: 14),
+          Expanded(
+            child: Column(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                Text(
+                  title,
+                  style: const TextStyle(
+                    fontSize: 12,
+                    color: Colors.black54,
+                  ),
+                ),
+                const SizedBox(height: 3),
+                Text(
+                  value,
+                  style: const TextStyle(
+                    fontWeight: FontWeight.w700,
+                  ),
+                ),
+              ],
+            ),
+          ),
+        ],
+      ),
+    );
+  }
 }
 class _CampusServiceTile extends StatelessWidget {
-final IconData icon;
-final String title;
-final String subtitle;
-final CampusService service;
+  final IconData icon;
+  final String title;
+  final String subtitle;
+  final CampusService service;
 
-const _CampusServiceTile({
-required this.icon,
-required this.title,
-required this.subtitle,
-required this.service,
-});
+  const _CampusServiceTile({
+    required this.icon,
+    required this.title,
+    required this.subtitle,
+    required this.service,
+  });
 
-@override
-Widget build(BuildContext context) {
-return Container(
-margin: const EdgeInsets.only(bottom: 10),
-child: ListTile(
-tileColor: Colors.white,
-contentPadding: const EdgeInsets.all(18),
-leading: Icon(icon, color: iituRed, size: 30),
-title: Text(
-title,
-style: const TextStyle(
-fontWeight: FontWeight.w800,
-fontSize: 16,
-),
-),
-subtitle: Padding(
-padding: const EdgeInsets.only(top: 5),
-child: Text(subtitle),
-),
-trailing: const Icon(Icons.arrow_forward_ios, size: 16),
-onTap: () async {
+  @override
+  Widget build(BuildContext context) {
+    return Container(
+      margin: const EdgeInsets.only(bottom: 10),
+      child: ListTile(
+        tileColor: Colors.white,
+        contentPadding: const EdgeInsets.all(18),
+        leading: Icon(icon, color: iituRed, size: 30),
+        title: Text(
+          title,
+          style: const TextStyle(
+            fontWeight: FontWeight.w800,
+            fontSize: 16,
+          ),
+        ),
+        subtitle: Padding(
+          padding: const EdgeInsets.only(top: 5),
+          child: Text(subtitle),
+        ),
+        trailing: const Icon(Icons.arrow_forward_ios, size: 16),
+        onTap: () async {
 // Passes the selected service object to the details screen.
-final result = await Navigator.pushNamed(
-context,
-AppRoutes.serviceDetail,
-arguments: service,
-);
+          final result = await Navigator.pushNamed(
+            context,
+            AppRoutes.serviceDetail,
+            arguments: service,
+          );
 // Shows visible feedback when a result is returned from the details screen.
-if (result == 'requested' && context.mounted) {
-ScaffoldMessenger.of(context).showSnackBar(
-SnackBar(
-content: Text(
-'${service.name} request submitted successfully!',
-),
-),
-);
-}
-},
-),
-);
-}
+          if (result == 'requested' && context.mounted) {
+            ScaffoldMessenger.of(context).showSnackBar(
+              SnackBar(
+                content: Text(
+                  '${service.name} request submitted successfully!',
+                ),
+              ),
+            );
+          }
+        },
+      ),
+    );
+  }
 }
 class _Stat extends StatelessWidget {
-final String value;
-final String label;
+  final String value;
+  final String label;
 
-const _Stat({required this.value, required this.label});
+  const _Stat({required this.value, required this.label});
 
-@override
-Widget build(BuildContext context) {
-return Column(
-children: [
-Text(
-value,
-style: const TextStyle(
-color: Colors.white,
-fontSize: 35,
-fontWeight: FontWeight.w900,
-),
-),
-const SizedBox(height: 5),
-Text(
-label,
-style: const TextStyle(
-color: Colors.white60,
-fontSize: 11,
-fontWeight: FontWeight.w700,
-letterSpacing: 1.2,
-),
-),
-],
-);
-}
+  @override
+  Widget build(BuildContext context) {
+    return Column(
+      children: [
+        Text(
+          value,
+          style: const TextStyle(
+            color: Colors.white,
+            fontSize: 35,
+            fontWeight: FontWeight.w900,
+          ),
+        ),
+        const SizedBox(height: 5),
+        Text(
+          label,
+          style: const TextStyle(
+            color: Colors.white60,
+            fontSize: 11,
+            fontWeight: FontWeight.w700,
+            letterSpacing: 1.2,
+          ),
+        ),
+      ],
+    );
+  }
 }
 
 class _VerticalLine extends StatelessWidget {
-const _VerticalLine();
+  const _VerticalLine();
 
-@override
-Widget build(BuildContext context) {
-return Container(
-width: 1,
-height: 55,
-color: Colors.white24,
-);
-}
+  @override
+  Widget build(BuildContext context) {
+    return Container(
+      width: 1,
+      height: 55,
+      color: Colors.white24,
+    );
+  }
 }
 
 class DetailPage extends StatelessWidget {
-final String title;
-final Widget child;
+  final String title;
+  final Widget child;
 
-const DetailPage({
-super.key,
-required this.title,
-required this.child,
-});
+  const DetailPage({
+    super.key,
+    required this.title,
+    required this.child,
+  });
 
-@override
-Widget build(BuildContext context) {
-return Scaffold(
-backgroundColor: pageBg,
-appBar: AppBar(
-backgroundColor: iituRed,
-foregroundColor: Colors.white,
-title: Text(
-title,
-style: const TextStyle(
-fontSize: 15,
-fontWeight: FontWeight.w900,
-letterSpacing: 1.2,
-),
-),
-),
-body: SingleChildScrollView(
-padding: const EdgeInsets.all(20),
-child: Center(
-child: ConstrainedBox(
-constraints: const BoxConstraints(maxWidth: 900),
-child: Column(
-crossAxisAlignment: CrossAxisAlignment.start,
-children: [
-const SizedBox(height: 15),
-Text(
-title,
-style: const TextStyle(
-fontSize: 30,
-fontWeight: FontWeight.w900,
-letterSpacing: -.5,
-),
-),
-const SizedBox(height: 8),
-Container(width: 55, height: 4, color: iituRed),
-const SizedBox(height: 28),
-child,
-const SizedBox(height: 60),
-],
-),
-),
-),
-),
-);
+  @override
+  Widget build(BuildContext context) {
+    return Scaffold(
+      backgroundColor: pageBg,
+      appBar: AppBar(
+        backgroundColor: iituRed,
+        foregroundColor: Colors.white,
+        title: Text(
+          title,
+          style: const TextStyle(
+            fontSize: 15,
+            fontWeight: FontWeight.w900,
+            letterSpacing: 1.2,
+          ),
+        ),
+      ),
+      body: SingleChildScrollView(
+        padding: const EdgeInsets.all(20),
+        child: Center(
+          child: ConstrainedBox(
+            constraints: const BoxConstraints(maxWidth: 900),
+            child: Column(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                const SizedBox(height: 15),
+                Text(
+                  title,
+                  style: const TextStyle(
+                    fontSize: 30,
+                    fontWeight: FontWeight.w900,
+                    letterSpacing: -.5,
+                  ),
+                ),
+                const SizedBox(height: 8),
+                Container(width: 55, height: 4, color: iituRed),
+                const SizedBox(height: 28),
+                child,
+                const SizedBox(height: 60),
+              ],
+            ),
+          ),
+        ),
+      ),
+    );
+  }
 }
-}
-class MyRequestsPage extends StatelessWidget {
-const MyRequestsPage({super.key});
+class MyRequestsPage extends StatefulWidget {
+  const MyRequestsPage({super.key});
 
-@override
-Widget build(BuildContext context) {
-return Scaffold(
-backgroundColor: pageBg,
-appBar: AppBar(
-title: const Text('MY REQUESTS'),
-backgroundColor: iituRed,
-foregroundColor: Colors.white,
-),
-body: StreamBuilder<QuerySnapshot<Map<String, dynamic>>>(
-  stream: FirebaseFirestore.instance
-      .collection('campusRequests')
-      .snapshots(),
-builder: (context, snapshot) {
-if (snapshot.hasError) {
-return const Center(child: Text('Unable to load requests.'));
-}
-if (!snapshot.hasData) {
-return const Center(child: CircularProgressIndicator());
+  @override
+  State<MyRequestsPage> createState() => _MyRequestsPageState();
 }
 
-final requests = snapshot.data!.docs.toList();
-requests.sort((a, b) {
-final aDate = a.data()['createdAt'] as Timestamp?;
-final bDate = b.data()['createdAt'] as Timestamp?;
-return (bDate?.millisecondsSinceEpoch ?? 0)
-    .compareTo(aDate?.millisecondsSinceEpoch ?? 0);
-});
+class _MyRequestsPageState extends State<MyRequestsPage> {
+  late final Stream<QuerySnapshot<Map<String, dynamic>>> _requestsStream;
+  final TextEditingController _searchController = TextEditingController();
+  String _search = '';
+  String _category = 'All';
+  String _status = 'All';
+  String _urgency = 'All';
+  String _sort = 'Newest first';
 
-if (requests.isEmpty) {
-return const Center(child: Text('No requests available yet.'));
-}
+  @override
+  void initState() {
+    super.initState();
+    _requestsStream = FirebaseFirestore.instance
+        .collection('campusRequests')
+        .snapshots();
+  }
 
-return ListView.builder(
-padding: const EdgeInsets.all(20),
-itemCount: requests.length,
-itemBuilder: (context, index) {
-final document = requests[index];
-final data = document.data();
-return Card(
-margin: const EdgeInsets.only(bottom: 12),
-child: ListTile(
-leading: const Icon(
-Icons.assignment_outlined,
-color: iituRed,
-),
-title: Text(
-data['subject']?.toString() ?? 'Untitled Request',
-),
-subtitle: Text(
-'${data['serviceCategory'] ?? 'Service'}'
-' • ${data['status'] ?? 'Submitted'}',
-),
-trailing: const Icon(Icons.chevron_right),
-onTap: () {
-Navigator.push(
-context,
-MaterialPageRoute(
-builder: (context) => RequestDetailsPage(
-requestId: document.id,
-  collectionName: 'campusRequests',),
-),
-);
-},
-),
-);
-},
-);
-},
-),
-);
-}
+  @override
+  void dispose() {
+    _searchController.dispose();
+    super.dispose();
+  }
+
+  void _resetFilters() {
+    _searchController.clear();
+    setState(() {
+      _search = '';
+      _category = 'All';
+      _status = 'All';
+      _urgency = 'All';
+      _sort = 'Newest first';
+    });
+  }
+
+  Widget _filterDropdown({
+    required String label,
+    required String selected,
+    required List<String> options,
+    required ValueChanged<String> onChanged,
+  }) {
+    return SizedBox(
+      width: 190,
+      child: DropdownButtonFormField<String>(
+        key: ValueKey('$label-$selected'),
+        initialValue: options.contains(selected) ? selected : 'All',
+        isExpanded: true,
+        decoration: InputDecoration(
+          labelText: label,
+          filled: true,
+          fillColor: Colors.white,
+          border: const OutlineInputBorder(),
+          contentPadding: const EdgeInsets.symmetric(horizontal: 12, vertical: 12),
+        ),
+        items: options.map((option) => DropdownMenuItem(
+          value: option,
+          child: Text(option, overflow: TextOverflow.ellipsis),
+        )).toList(),
+        onChanged: (value) {
+          if (value != null) onChanged(value);
+        },
+      ),
+    );
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    return Scaffold(
+      backgroundColor: pageBg,
+      appBar: AppBar(
+        title: const Text('MY REQUESTS'),
+        backgroundColor: iituRed,
+        foregroundColor: Colors.white,
+      ),
+      body: StreamBuilder<QuerySnapshot<Map<String, dynamic>>>(
+        stream: _requestsStream,
+        builder: (context, snapshot) {
+          if (snapshot.hasError) {
+            return const Center(child: Text('Unable to load requests.'));
+          }
+          if (!snapshot.hasData) {
+            return const Center(child: CircularProgressIndicator());
+          }
+
+          final allRequests = snapshot.data!.docs.toList();
+          List<String> choices(String field) {
+            final values = allRequests
+                .map((doc) => (doc.data()[field] ?? '').toString().trim())
+                .where((value) => value.isNotEmpty && value != 'All')
+                .toSet()
+                .toList()..sort();
+            return ['All', ...values];
+          }
+
+          final categories = choices('serviceCategory');
+          final statuses = choices('status');
+          final urgencies = choices('urgency');
+          final keyword = _search.trim().toLowerCase();
+          final requests = allRequests.where((doc) {
+            final data = doc.data();
+            final searchable = [
+              data['subject'],
+              data['description'],
+              data['studentName'],
+              data['studentId'],
+              data['serviceCategory'],
+            ].map((value) => (value ?? '').toString().toLowerCase()).join(' ');
+            return (keyword.isEmpty || searchable.contains(keyword)) &&
+                (_category == 'All' || data['serviceCategory'] == _category) &&
+                (_status == 'All' || data['status'] == _status) &&
+                (_urgency == 'All' || data['urgency'] == _urgency);
+          }).toList();
+
+          requests.sort((a, b) {
+            final aDate = a.data()['createdAt'];
+            final bDate = b.data()['createdAt'];
+            final aTime = aDate is Timestamp ? aDate.millisecondsSinceEpoch : 0;
+            final bTime = bDate is Timestamp ? bDate.millisecondsSinceEpoch : 0;
+            return _sort == 'Oldest first'
+                ? aTime.compareTo(bTime)
+                : bTime.compareTo(aTime);
+          });
+
+          return Center(
+            child: ConstrainedBox(
+              constraints: const BoxConstraints(maxWidth: 1000),
+              child: ListView(
+                padding: const EdgeInsets.all(20),
+                children: [
+                  const Text('ADVANCED SEARCH', style: TextStyle(
+                      fontSize: 20, fontWeight: FontWeight.w900)),
+                  const SizedBox(height: 12),
+                  TextFormField(
+                    key: const ValueKey('request-search'),
+                    controller: _searchController,
+                    decoration: const InputDecoration(
+                      labelText: 'Search requests',
+                      hintText: 'Subject, description, student name or ID',
+                      prefixIcon: Icon(Icons.search),
+                      filled: true,
+                      fillColor: Colors.white,
+                      border: OutlineInputBorder(),
+                    ),
+                    onChanged: (value) => setState(() => _search = value),
+                  ),
+                  const SizedBox(height: 14),
+                  Wrap(
+                    spacing: 12,
+                    runSpacing: 12,
+                    children: [
+                      _filterDropdown(
+                        label: 'Category', selected: _category,
+                        options: categories,
+                        onChanged: (value) => setState(() => _category = value),
+                      ),
+                      _filterDropdown(
+                        label: 'Status', selected: _status,
+                        options: statuses,
+                        onChanged: (value) => setState(() => _status = value),
+                      ),
+                      _filterDropdown(
+                        label: 'Urgency', selected: _urgency,
+                        options: urgencies,
+                        onChanged: (value) => setState(() => _urgency = value),
+                      ),
+                      SizedBox(
+                        width: 190,
+                        child: DropdownButtonFormField<String>(
+                          key: ValueKey('sort-$_sort'),
+                          initialValue: _sort,
+                          decoration: const InputDecoration(
+                            labelText: 'Sort by',
+                            filled: true,
+                            fillColor: Colors.white,
+                            border: OutlineInputBorder(),
+                            contentPadding: EdgeInsets.symmetric(horizontal: 12, vertical: 12),
+                          ),
+                          items: ['Newest first', 'Oldest first']
+                              .map((value) => DropdownMenuItem(value: value, child: Text(value)))
+                              .toList(),
+                          onChanged: (value) {
+                            if (value != null) setState(() => _sort = value);
+                          },
+                        ),
+                      ),
+                    ],
+                  ),
+                  const SizedBox(height: 12),
+                  Row(
+                    children: [
+                      Expanded(child: Text(
+                        'Showing ${requests.length} of ${allRequests.length} requests',
+                        style: const TextStyle(fontWeight: FontWeight.w700),
+                      )),
+                      TextButton.icon(
+                        onPressed: _resetFilters,
+                        icon: const Icon(Icons.refresh),
+                        label: const Text('Reset Filters'),
+                      ),
+                    ],
+                  ),
+                  const SizedBox(height: 10),
+                  if (requests.isEmpty)
+                    const Padding(
+                      padding: EdgeInsets.symmetric(vertical: 40),
+                      child: Center(child: Text('No matching requests found.')),
+                    ),
+                  ...requests.map((document) {
+                    final data = document.data();
+                    return Card(
+                      margin: const EdgeInsets.only(bottom: 12),
+                      child: ListTile(
+                        leading: const Icon(Icons.assignment_outlined, color: iituRed),
+                        title: Text(data['subject']?.toString() ?? 'Untitled Request'),
+                        subtitle: Text(
+                          '${data['serviceCategory'] ?? 'Service'} • '
+                              '${data['status'] ?? 'Submitted'} • '
+                              '${data['urgency'] ?? 'Normal'}',
+                        ),
+                        trailing: const Icon(Icons.chevron_right),
+                        onTap: () => Navigator.push(
+                          context,
+                          MaterialPageRoute(
+                            builder: (context) => RequestDetailsPage(
+                              requestId: document.id,
+                              collectionName: 'campusRequests',
+                            ),
+                          ),
+                        ),
+                      ),
+                    );
+                  }),
+                ],
+              ),
+            ),
+          );
+        },
+      ),
+    );
+  }
 }
 
 class RequestDetailsPage extends StatelessWidget {final String requestId;
 final String collectionName;
 
 const RequestDetailsPage({
-super.key,
-required this.requestId,
-this.collectionName = 'campusRequests',
+  super.key,
+  required this.requestId,
+  this.collectionName = 'campusRequests',
 });
 
 @override
 Widget build(BuildContext context) {
-return Scaffold(
-backgroundColor: pageBg,
-appBar: AppBar(
-title: const Text('REQUEST DETAILS'),
-backgroundColor: iituRed,
-foregroundColor: Colors.white,
-),
+  return Scaffold(
+    backgroundColor: pageBg,
+    appBar: AppBar(
+      title: const Text('REQUEST DETAILS'),
+      backgroundColor: iituRed,
+      foregroundColor: Colors.white,
+    ),
 
-body: FutureBuilder<DocumentSnapshot<Map<String, dynamic>>>(
-future: FirebaseFirestore.instance
-    .collection(collectionName)
-    .doc(requestId)
-    .get(const GetOptions(source: Source.server)),
-builder: (context, snapshot) {
-if (snapshot.hasError) {
-return const Center(
-child: Text('Unable to load request from Firebase.'),
-);
-}
+    body: FutureBuilder<DocumentSnapshot<Map<String, dynamic>>>(
+      future: FirebaseFirestore.instance
+          .collection(collectionName)
+          .doc(requestId)
+          .get(const GetOptions(source: Source.server)),
+      builder: (context, snapshot) {
+        if (snapshot.hasError) {
+          return const Center(
+            child: Text('Unable to load request from Firebase.'),
+          );
+        }
 
-if (!snapshot.hasData) {
-return const Center(
-child: CircularProgressIndicator(),
-);
-}
+        if (!snapshot.hasData) {
+          return const Center(
+            child: CircularProgressIndicator(),
+          );
+        }
 
-final data = snapshot.data!.data();
+        final data = snapshot.data!.data();
 
-if (data == null) {
-return const Center(
-child: Text('Request not found.'),
-);
-}
+        if (data == null) {
+          return const Center(
+            child: Text('Request not found.'),
+          );
+        }
 
-final fields = <String, dynamic>{
-'Request ID': requestId,
-'Student Name': data['studentName'],
-'Student ID': data['studentId'],
-if (collectionName != 'publicCampusRequests') ...{
-'Email': data['email'],
-'Phone': data['phone'],
-},
-'Service Category': data['serviceCategory'],
-'Subject': data['subject'],
-'Description': data['description'],
-'Urgency': data['urgency'],
-'Preferred Contact': data['preferredContact'],
-'Status': data['status'],
-};
+        final fields = <String, dynamic>{
+          'Request ID': requestId,
+          'Student Name': data['studentName'],
+          'Student ID': data['studentId'],
+          if (collectionName != 'publicCampusRequests') ...{
+            'Email': data['email'],
+            'Phone': data['phone'],
+          },
+          'Service Category': data['serviceCategory'],
+          'Subject': data['subject'],
+          'Description': data['description'],
+          'Urgency': data['urgency'],
+          'Preferred Contact': data['preferredContact'],
+          'Status': data['status'],
+        };
 
-final date = data['preferredDate'];
-if (date is Timestamp) {
-final value = date.toDate();
-fields['Preferred Date'] =
-'${value.day}/${value.month}/${value.year}';
-}
+        final date = data['preferredDate'];
+        if (date is Timestamp) {
+          final value = date.toDate();
+          fields['Preferred Date'] =
+          '${value.day}/${value.month}/${value.year}';
+        }
 
-return ListView(
-padding: const EdgeInsets.all(20),
-children: [
-const Icon(
-Icons.check_circle,
-color: Colors.green,
-size: 60,
-),
-const SizedBox(height: 12),
-const Center(
-child: Text(
-'Your Request Information',
-style: TextStyle(
-fontSize: 22,
-fontWeight: FontWeight.bold,
-),
-),
-),
-const SizedBox(height: 20),
-...fields.entries.map(
-(entry) => Card(
-child: ListTile(
-title: Text(
-entry.key,
-style: const TextStyle(
-fontWeight: FontWeight.bold,
-),
-),
-subtitle: Text(
-entry.value?.toString() ?? 'Not provided',
-),
-),
-),
-),
-],
-);
-},
-),
-);
+        return ListView(
+          padding: const EdgeInsets.all(20),
+          children: [
+            const Icon(
+              Icons.check_circle,
+              color: Colors.green,
+              size: 60,
+            ),
+            const SizedBox(height: 12),
+            const Center(
+              child: Text(
+                'Your Request Information',
+                style: TextStyle(
+                  fontSize: 22,
+                  fontWeight: FontWeight.bold,
+                ),
+              ),
+            ),
+            const SizedBox(height: 20),
+            ...fields.entries.map(
+                  (entry) => Card(
+                child: ListTile(
+                  title: Text(
+                    entry.key,
+                    style: const TextStyle(
+                      fontWeight: FontWeight.bold,
+                    ),
+                  ),
+                  subtitle: Text(
+                    entry.value?.toString() ?? 'Not provided',
+                  ),
+                ),
+              ),
+            ),
+          ],
+        );
+      },
+    ),
+  );
 }
 }
 
 class StudentServiceFormPage extends StatefulWidget {
-const StudentServiceFormPage({super.key});
+  const StudentServiceFormPage({super.key});
 
-@override
-State<StudentServiceFormPage> createState() =>
-_StudentServiceFormPageState();
+  @override
+  State<StudentServiceFormPage> createState() =>
+      _StudentServiceFormPageState();
 }
 
 class _StudentServiceFormPageState extends State<StudentServiceFormPage> {
-final _formKey = GlobalKey<FormState>();
-String? _lastRequestId;
+  final _formKey = GlobalKey<FormState>();
+  String? _lastRequestId;
 
-@override
-void initState() {
-super.initState();
-_loadLastRequestId();
-}
+  @override
+  void initState() {
+    super.initState();
+    _loadLastRequestId();
+  }
 
-Future<void> _loadLastRequestId() async {
-final prefs = await SharedPreferences.getInstance();
-final savedId = prefs.getString('lastRequestId');
+  Future<void> _loadLastRequestId() async {
+    final prefs = await SharedPreferences.getInstance();
+    final savedId = prefs.getString('lastRequestId');
 
-if (!mounted) return;
+    if (!mounted) return;
 
-setState(() {
-_lastRequestId = savedId;
-});
-}
+    setState(() {
+      _lastRequestId = savedId;
+    });
+  }
 
-final _nameController = TextEditingController();
-final _idController = TextEditingController();
-final _emailController = TextEditingController();
-final _phoneController = TextEditingController();
-final _subjectController = TextEditingController();
-final _detailsController = TextEditingController();
+  final _nameController = TextEditingController();
+  final _idController = TextEditingController();
+  final _emailController = TextEditingController();
+  final _phoneController = TextEditingController();
+  final _subjectController = TextEditingController();
+  final _detailsController = TextEditingController();
 
-String? _selectedCategory;
-String? _selectedUrgency;
-String? _preferredContact;
-DateTime? _preferredDate;
-bool _acceptedDeclaration = false;
+  String? _selectedCategory;
+  String? _selectedUrgency;
+  String? _preferredContact;
+  DateTime? _preferredDate;
+  bool _acceptedDeclaration = false;
 
-@override
-Widget build(BuildContext context) {
-return Scaffold(
-appBar: AppBar(
-backgroundColor: iituRed,
-foregroundColor: Colors.white,
-title: const Text(
-'STUDENT SERVICE CENTRE',
-style: TextStyle(
-fontSize: 15,
-fontWeight: FontWeight.w900,
-letterSpacing: 1.2,
-),
-),
-),
+  @override
+  Widget build(BuildContext context) {
+    return Scaffold(
+      appBar: AppBar(
+        backgroundColor: iituRed,
+        foregroundColor: Colors.white,
+        title: const Text(
+          'STUDENT SERVICE CENTRE',
+          style: TextStyle(
+            fontSize: 15,
+            fontWeight: FontWeight.w900,
+            letterSpacing: 1.2,
+          ),
+        ),
+      ),
 
-body: SafeArea(
-child: SingleChildScrollView(
-padding: const EdgeInsets.all(20),
-child: Center(
-child: ConstrainedBox(
-constraints: const BoxConstraints(maxWidth: 850),
-child: Form(
-key: _formKey,
-autovalidateMode: AutovalidateMode.onUserInteraction,
-child: Column(
-crossAxisAlignment: CrossAxisAlignment.start,
-children: [
-const Text(
-'CAMPUS SERVICE REQUEST',
-style: TextStyle(
-fontSize: 30,
-fontWeight: FontWeight.w900,
-),
-),
+      body: SafeArea(
+        child: SingleChildScrollView(
+          padding: const EdgeInsets.all(20),
+          child: Center(
+            child: ConstrainedBox(
+              constraints: const BoxConstraints(maxWidth: 850),
+              child: Form(
+                key: _formKey,
+                autovalidateMode: AutovalidateMode.onUserInteraction,
+                child: Column(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: [
+                    const Text(
+                      'CAMPUS SERVICE REQUEST',
+                      style: TextStyle(
+                        fontSize: 30,
+                        fontWeight: FontWeight.w900,
+                      ),
+                    ),
 
-const SizedBox(height: 8),
+                    const SizedBox(height: 8),
 
-Container(
-width: 55,
-height: 4,
-color: iituRed,
-),
+                    Container(
+                      width: 55,
+                      height: 4,
+                      color: iituRed,
+                    ),
 
-const SizedBox(height: 12),
+                    const SizedBox(height: 12),
 
-const Text(
-'Complete the form below to contact a campus service unit.',
-style: TextStyle(
-color: Colors.black54,
-fontSize: 15,
-),
-),
+                    const Text(
+                      'Complete the form below to contact a campus service unit.',
+                      style: TextStyle(
+                        color: Colors.black54,
+                        fontSize: 15,
+                      ),
+                    ),
 
-const SizedBox(height: 35),
+                    const SizedBox(height: 35),
 
-const Text(
-'STUDENT DETAILS',
-style: TextStyle(
-fontSize: 18,
-fontWeight: FontWeight.w900,
-letterSpacing: 1,
-),
-),
+                    const Text(
+                      'STUDENT DETAILS',
+                      style: TextStyle(
+                        fontSize: 18,
+                        fontWeight: FontWeight.w900,
+                        letterSpacing: 1,
+                      ),
+                    ),
 
-const SizedBox(height: 18),
+                    const SizedBox(height: 18),
 
 // STUDENT NAME
-TextFormField(
-controller: _nameController,
-textInputAction: TextInputAction.next,
-decoration: const InputDecoration(
-labelText: 'Student Name',
-hintText: 'Enter your full name',
-prefixIcon: Icon(Icons.person_outline),
-border: OutlineInputBorder(),
-),
-validator: (value) {
-if (value == null || value.trim().isEmpty) {
-return 'Please enter your full name';
-}
+                    TextFormField(
+                      controller: _nameController,
+                      textInputAction: TextInputAction.next,
+                      decoration: const InputDecoration(
+                        labelText: 'Student Name',
+                        hintText: 'Enter your full name',
+                        prefixIcon: Icon(Icons.person_outline),
+                        border: OutlineInputBorder(),
+                      ),
+                      validator: (value) {
+                        if (value == null || value.trim().isEmpty) {
+                          return 'Please enter your full name';
+                        }
 
-if (value.trim().split(' ').length < 2) {
-return 'Please enter at least two names';
-}
+                        if (value.trim().split(' ').length < 2) {
+                          return 'Please enter at least two names';
+                        }
 
-return null;
-},
-),
+                        return null;
+                      },
+                    ),
 
-const SizedBox(height: 16),
+                    const SizedBox(height: 16),
 
 // STUDENT ID
-TextFormField(
-controller: _idController,
-keyboardType: TextInputType.number,
-textInputAction: TextInputAction.next,
-decoration: const InputDecoration(
-labelText: 'Student ID',
-hintText: 'Example: 436798',
-prefixIcon: Icon(Icons.badge_outlined),
-border: OutlineInputBorder(),
-),
-validator: (value) {
-if (value == null || value.trim().isEmpty) {
-return 'Please enter your Student ID';
-}
+                    TextFormField(
+                      controller: _idController,
+                      keyboardType: TextInputType.number,
+                      textInputAction: TextInputAction.next,
+                      decoration: const InputDecoration(
+                        labelText: 'Student ID',
+                        hintText: 'Example: 436798',
+                        prefixIcon: Icon(Icons.badge_outlined),
+                        border: OutlineInputBorder(),
+                      ),
+                      validator: (value) {
+                        if (value == null || value.trim().isEmpty) {
+                          return 'Please enter your Student ID';
+                        }
 
-if (!RegExp(r'^[0-9]{6,}$').hasMatch(value.trim())) {
-return 'Student ID must contain at least 6 digits';
-}
+                        if (!RegExp(r'^[0-9]{6,}$').hasMatch(value.trim())) {
+                          return 'Student ID must contain at least 6 digits';
+                        }
 
-return null;
-},
-),
+                        return null;
+                      },
+                    ),
 
-const SizedBox(height: 16),
+                    const SizedBox(height: 16),
 
 // CAMPUS EMAIL
-TextFormField(
-controller: _emailController,
-keyboardType: TextInputType.emailAddress,
-textInputAction: TextInputAction.next,
-decoration: const InputDecoration(
-labelText: 'Campus Email',
-hintText: 'student@iitu.edu.kz',
-prefixIcon: Icon(Icons.email_outlined),
-border: OutlineInputBorder(),
-),
-validator: (value) {
-if (value == null || value.trim().isEmpty) {
-return 'Please enter your campus email';
-}
+                    TextFormField(
+                      controller: _emailController,
+                      keyboardType: TextInputType.emailAddress,
+                      textInputAction: TextInputAction.next,
+                      decoration: const InputDecoration(
+                        labelText: 'Campus Email',
+                        hintText: 'student@iitu.edu.kz',
+                        prefixIcon: Icon(Icons.email_outlined),
+                        border: OutlineInputBorder(),
+                      ),
+                      validator: (value) {
+                        if (value == null || value.trim().isEmpty) {
+                          return 'Please enter your campus email';
+                        }
 
-if (!value.contains('@') || !value.contains('.')) {
-return 'Please enter a valid email address';
-}
+                        if (!value.contains('@') || !value.contains('.')) {
+                          return 'Please enter a valid email address';
+                        }
 
-return null;
-},
-),
+                        return null;
+                      },
+                    ),
 
-const SizedBox(height: 16),
+                    const SizedBox(height: 16),
 // PHONE NUMBER
-TextFormField(
-controller: _phoneController,
-keyboardType: TextInputType.phone,
-textInputAction: TextInputAction.next,
-decoration: const InputDecoration(
-labelText: 'Phone Number',
-hintText: '+7 700 000 0000',
-prefixIcon: Icon(Icons.phone_outlined),
-border: OutlineInputBorder(),
-),
-validator: (value) {
-if (value != null && value.trim().isNotEmpty) {
-final phone = value.replaceAll(' ', '');
+                    TextFormField(
+                      controller: _phoneController,
+                      keyboardType: TextInputType.phone,
+                      textInputAction: TextInputAction.next,
+                      decoration: const InputDecoration(
+                        labelText: 'Phone Number',
+                        hintText: '+7 700 000 0000',
+                        prefixIcon: Icon(Icons.phone_outlined),
+                        border: OutlineInputBorder(),
+                      ),
+                      validator: (value) {
+                        if (value != null && value.trim().isNotEmpty) {
+                          final phone = value.replaceAll(' ', '');
 
-if (!RegExp(r'^\+?[0-9]{7,15}$').hasMatch(phone)) {
-return 'Please enter a valid phone number';
-}
-}
+                          if (!RegExp(r'^\+?[0-9]{7,15}$').hasMatch(phone)) {
+                            return 'Please enter a valid phone number';
+                          }
+                        }
 
-return null;
-},
-),
+                        return null;
+                      },
+                    ),
 
-const SizedBox(height: 40),
+                    const SizedBox(height: 40),
 
-const Text(
-'REQUEST DETAILS',
-style: TextStyle(
-fontSize: 18,
-fontWeight: FontWeight.w900,
-letterSpacing: 1,
-),
-),
+                    const Text(
+                      'REQUEST DETAILS',
+                      style: TextStyle(
+                        fontSize: 18,
+                        fontWeight: FontWeight.w900,
+                        letterSpacing: 1,
+                      ),
+                    ),
 
-const SizedBox(height: 18),
+                    const SizedBox(height: 18),
 
 // SERVICE CATEGORY
-DropdownButtonFormField<String>(
-initialValue: _selectedCategory,
-decoration: const InputDecoration(
-labelText: 'Service Category',
-prefixIcon: Icon(Icons.category_outlined),
-border: OutlineInputBorder(),
-),
-hint: const Text('Select a service'),
-items: const [
-DropdownMenuItem(
-value: 'IT Support',
-child: Text('IT Support'),
-),
-DropdownMenuItem(
-value: 'Academic Support',
-child: Text('Academic Support'),
-),
-DropdownMenuItem(
-value: 'Library Services',
-child: Text('Library Services'),
-),
-DropdownMenuItem(
-value: 'Student Affairs',
-child: Text('Student Affairs'),
-),
-DropdownMenuItem(
-value: 'Campus Facilities',
-child: Text('Campus Facilities'),
-),
-DropdownMenuItem(
-value: 'Career Services',
-child: Text('Career Services'),
-),
-],
-onChanged: (value) {
-setState(() {
-_selectedCategory = value;
-});
-},
-validator: (value) {
-if (value == null || value.isEmpty) {
-return 'Please select a service category';
-}
-return null;
-},
-),
+                    DropdownButtonFormField<String>(
+                      initialValue: _selectedCategory,
+                      decoration: const InputDecoration(
+                        labelText: 'Service Category',
+                        prefixIcon: Icon(Icons.category_outlined),
+                        border: OutlineInputBorder(),
+                      ),
+                      hint: const Text('Select a service'),
+                      items: const [
+                        DropdownMenuItem(
+                          value: 'IT Support',
+                          child: Text('IT Support'),
+                        ),
+                        DropdownMenuItem(
+                          value: 'Academic Support',
+                          child: Text('Academic Support'),
+                        ),
+                        DropdownMenuItem(
+                          value: 'Library Services',
+                          child: Text('Library Services'),
+                        ),
+                        DropdownMenuItem(
+                          value: 'Student Affairs',
+                          child: Text('Student Affairs'),
+                        ),
+                        DropdownMenuItem(
+                          value: 'Campus Facilities',
+                          child: Text('Campus Facilities'),
+                        ),
+                        DropdownMenuItem(
+                          value: 'Career Services',
+                          child: Text('Career Services'),
+                        ),
+                      ],
+                      onChanged: (value) {
+                        setState(() {
+                          _selectedCategory = value;
+                        });
+                      },
+                      validator: (value) {
+                        if (value == null || value.isEmpty) {
+                          return 'Please select a service category';
+                        }
+                        return null;
+                      },
+                    ),
 
-const SizedBox(height: 16),
+                    const SizedBox(height: 16),
 
 // REQUEST SUBJECT
-TextFormField(
-controller: _subjectController,
-textInputAction: TextInputAction.next,
-decoration: const InputDecoration(
-labelText: 'Request Subject',
-hintText: 'Briefly describe your request',
-prefixIcon: Icon(Icons.title_outlined),
-border: OutlineInputBorder(),
-),
-validator: (value) {
-if (value == null || value.trim().isEmpty) {
-return 'Please enter a request subject';
-}
+                    TextFormField(
+                      controller: _subjectController,
+                      textInputAction: TextInputAction.next,
+                      decoration: const InputDecoration(
+                        labelText: 'Request Subject',
+                        hintText: 'Briefly describe your request',
+                        prefixIcon: Icon(Icons.title_outlined),
+                        border: OutlineInputBorder(),
+                      ),
+                      validator: (value) {
+                        if (value == null || value.trim().isEmpty) {
+                          return 'Please enter a request subject';
+                        }
 
-if (value.trim().length < 5) {
-return 'Subject must contain at least 5 characters';
-}
+                        if (value.trim().length < 5) {
+                          return 'Subject must contain at least 5 characters';
+                        }
 
-return null;
-},
-),
+                        return null;
+                      },
+                    ),
 
-const SizedBox(height: 16),
+                    const SizedBox(height: 16),
 
 // REQUEST DETAILS
-TextFormField(
-controller: _detailsController,
-keyboardType: TextInputType.multiline,
-maxLines: 5,
-maxLength: 300,
-decoration: const InputDecoration(
-labelText: 'Request Details',
-hintText: 'Describe your request in more detail...',
-prefixIcon: Padding(
-padding: EdgeInsets.only(bottom: 80),
-child: Icon(Icons.description_outlined),
-),
-border: OutlineInputBorder(),
-alignLabelWithHint: true,
-),
-validator: (value) {
-if (value == null || value.trim().isEmpty) {
-return 'Please describe your request';
-}
+                    TextFormField(
+                      controller: _detailsController,
+                      keyboardType: TextInputType.multiline,
+                      maxLines: 5,
+                      maxLength: 300,
+                      decoration: const InputDecoration(
+                        labelText: 'Request Details',
+                        hintText: 'Describe your request in more detail...',
+                        prefixIcon: Padding(
+                          padding: EdgeInsets.only(bottom: 80),
+                          child: Icon(Icons.description_outlined),
+                        ),
+                        border: OutlineInputBorder(),
+                        alignLabelWithHint: true,
+                      ),
+                      validator: (value) {
+                        if (value == null || value.trim().isEmpty) {
+                          return 'Please describe your request';
+                        }
 
-if (value.trim().length < 20) {
-return 'Please enter at least 20 characters';
-}
+                        if (value.trim().length < 20) {
+                          return 'Please enter at least 20 characters';
+                        }
 
-return null;
-},
-),
+                        return null;
+                      },
+                    ),
 
-const SizedBox(height: 30),
+                    const SizedBox(height: 30),
 
 
 
 // URGENCY
-const Text(
-'URGENCY',
-style: TextStyle(
-fontSize: 16,
-fontWeight: FontWeight.w800,
-),
-),
+                    const Text(
+                      'URGENCY',
+                      style: TextStyle(
+                        fontSize: 16,
+                        fontWeight: FontWeight.w800,
+                      ),
+                    ),
 
-const SizedBox(height: 10),
+                    const SizedBox(height: 10),
 
-FormField<String>(
-validator: (value) {
-if (_selectedUrgency == null) {
-return 'Please select urgency';
-}
-return null;
-},
-builder: (field) {
-return Column(
-crossAxisAlignment: CrossAxisAlignment.start,
-children: [
-Wrap(
-spacing: 10,
-children: ['Normal', 'Soon', 'Urgent'].map((level) {
-return ChoiceChip(
-label: Text(level),
-selected: _selectedUrgency == level,
-onSelected: (selected) {
-setState(() {
-_selectedUrgency = level;
-});
-field.didChange(level);
-},
-);
-}).toList(),
-),
-if (field.hasError)
-Padding(
-padding: const EdgeInsets.only(top: 8),
-child: Text(
-field.errorText!,
-style: TextStyle(
-color: Theme.of(context).colorScheme.error,
-fontSize: 12,
-),
-),
-),
-],
-);
-},
-),
+                    FormField<String>(
+                      validator: (value) {
+                        if (_selectedUrgency == null) {
+                          return 'Please select urgency';
+                        }
+                        return null;
+                      },
+                      builder: (field) {
+                        return Column(
+                          crossAxisAlignment: CrossAxisAlignment.start,
+                          children: [
+                            Wrap(
+                              spacing: 10,
+                              children: ['Normal', 'Soon', 'Urgent'].map((level) {
+                                return ChoiceChip(
+                                  label: Text(level),
+                                  selected: _selectedUrgency == level,
+                                  onSelected: (selected) {
+                                    setState(() {
+                                      _selectedUrgency = level;
+                                    });
+                                    field.didChange(level);
+                                  },
+                                );
+                              }).toList(),
+                            ),
+                            if (field.hasError)
+                              Padding(
+                                padding: const EdgeInsets.only(top: 8),
+                                child: Text(
+                                  field.errorText!,
+                                  style: TextStyle(
+                                    color: Theme.of(context).colorScheme.error,
+                                    fontSize: 12,
+                                  ),
+                                ),
+                              ),
+                          ],
+                        );
+                      },
+                    ),
 
-const SizedBox(height: 35),
+                    const SizedBox(height: 35),
 
-const Text(
-'PREFERENCES',
-style: TextStyle(
-fontSize: 18,
-fontWeight: FontWeight.w900,
-letterSpacing: 1,
-),
-),
+                    const Text(
+                      'PREFERENCES',
+                      style: TextStyle(
+                        fontSize: 18,
+                        fontWeight: FontWeight.w900,
+                        letterSpacing: 1,
+                      ),
+                    ),
 
-const SizedBox(height: 18),
+                    const SizedBox(height: 18),
 
 // PREFERRED CONTACT
-const Text(
-'Preferred Contact Method',
-style: TextStyle(
-fontSize: 15,
-fontWeight: FontWeight.w700,
-),
-),
+                    const Text(
+                      'Preferred Contact Method',
+                      style: TextStyle(
+                        fontSize: 15,
+                        fontWeight: FontWeight.w700,
+                      ),
+                    ),
 
-const SizedBox(height: 10),
+                    const SizedBox(height: 10),
 
-FormField<String>(
-validator: (value) {
-if (_preferredContact == null) {
-return 'Please select a contact method';
-}
-return null;
-},
-builder: (field) {
-return Column(
-crossAxisAlignment: CrossAxisAlignment.start,
-children: [
-Wrap(
-spacing: 10,
-children: ['Email', 'Phone'].map((method) {
-return ChoiceChip(
-label: Text(method),
-selected: _preferredContact == method,
-onSelected: (selected) {
-setState(() {
-_preferredContact = method;
-});
-field.didChange(method);
-},
-);
-}).toList(),
-),
-if (field.hasError)
-Padding(
-padding: const EdgeInsets.only(top: 8),
-child: Text(
-field.errorText!,
-style: TextStyle(
-color: Theme.of(context).colorScheme.error,
-fontSize: 12,
-),
-),
-),
-],
-);
-},
-),
+                    FormField<String>(
+                      validator: (value) {
+                        if (_preferredContact == null) {
+                          return 'Please select a contact method';
+                        }
+                        return null;
+                      },
+                      builder: (field) {
+                        return Column(
+                          crossAxisAlignment: CrossAxisAlignment.start,
+                          children: [
+                            Wrap(
+                              spacing: 10,
+                              children: ['Email', 'Phone'].map((method) {
+                                return ChoiceChip(
+                                  label: Text(method),
+                                  selected: _preferredContact == method,
+                                  onSelected: (selected) {
+                                    setState(() {
+                                      _preferredContact = method;
+                                    });
+                                    field.didChange(method);
+                                  },
+                                );
+                              }).toList(),
+                            ),
+                            if (field.hasError)
+                              Padding(
+                                padding: const EdgeInsets.only(top: 8),
+                                child: Text(
+                                  field.errorText!,
+                                  style: TextStyle(
+                                    color: Theme.of(context).colorScheme.error,
+                                    fontSize: 12,
+                                  ),
+                                ),
+                              ),
+                          ],
+                        );
+                      },
+                    ),
 
-const SizedBox(height: 24),
+                    const SizedBox(height: 24),
 
 // PREFERRED DATE
-FormField<DateTime>(
-validator: (value) {
-if (_preferredDate == null) {
-return 'Please select a preferred date';
-}
+                    FormField<DateTime>(
+                      validator: (value) {
+                        if (_preferredDate == null) {
+                          return 'Please select a preferred date';
+                        }
 
-final now = DateTime.now();
-final today = DateTime(now.year, now.month, now.day);
+                        final now = DateTime.now();
+                        final today = DateTime(now.year, now.month, now.day);
 
-if (_preferredDate!.isBefore(today)) {
-return 'Preferred date cannot be in the past';
-}
+                        if (_preferredDate!.isBefore(today)) {
+                          return 'Preferred date cannot be in the past';
+                        }
 
-return null;
-},
-builder: (field) {
-return InkWell(
-onTap: () async {
-final now = DateTime.now();
-final today = DateTime(now.year, now.month, now.day);
+                        return null;
+                      },
+                      builder: (field) {
+                        return InkWell(
+                          onTap: () async {
+                            final now = DateTime.now();
+                            final today = DateTime(now.year, now.month, now.day);
 
-final pickedDate = await showDatePicker(
-context: context,
-initialDate: _preferredDate ?? today,
-firstDate: today,
-lastDate: DateTime(
-now.year + 1,
-now.month,
-now.day,
-),
-);
+                            final pickedDate = await showDatePicker(
+                              context: context,
+                              initialDate: _preferredDate ?? today,
+                              firstDate: today,
+                              lastDate: DateTime(
+                                now.year + 1,
+                                now.month,
+                                now.day,
+                              ),
+                            );
 
-if (pickedDate != null) {
-setState(() {
-_preferredDate = pickedDate;
-});
+                            if (pickedDate != null) {
+                              setState(() {
+                                _preferredDate = pickedDate;
+                              });
 
-field.didChange(pickedDate);
-}
-},
-child: InputDecorator(
-decoration: InputDecoration(
-labelText: 'Preferred Date',
-prefixIcon: const Icon(Icons.calendar_today_outlined),
-border: const OutlineInputBorder(),
-errorText: field.errorText,
-),
-child: Text(
-_preferredDate == null
-? 'Select a date'
-    : '${_preferredDate!.day.toString().padLeft(2, '0')}/'
-'${_preferredDate!.month.toString().padLeft(2, '0')}/'
-'${_preferredDate!.year}',
-),
-),
-);
-},
-),
+                              field.didChange(pickedDate);
+                            }
+                          },
+                          child: InputDecorator(
+                            decoration: InputDecoration(
+                              labelText: 'Preferred Date',
+                              prefixIcon: const Icon(Icons.calendar_today_outlined),
+                              border: const OutlineInputBorder(),
+                              errorText: field.errorText,
+                            ),
+                            child: Text(
+                              _preferredDate == null
+                                  ? 'Select a date'
+                                  : '${_preferredDate!.day.toString().padLeft(2, '0')}/'
+                                  '${_preferredDate!.month.toString().padLeft(2, '0')}/'
+                                  '${_preferredDate!.year}',
+                            ),
+                          ),
+                        );
+                      },
+                    ),
 
-const SizedBox(height: 35),
+                    const SizedBox(height: 35),
 
 // CONFIRMATION
-const Text(
-'CONFIRMATION',
-style: TextStyle(
-fontSize: 18,
-fontWeight: FontWeight.w900,
-letterSpacing: 1,
-),
-),
+                    const Text(
+                      'CONFIRMATION',
+                      style: TextStyle(
+                        fontSize: 18,
+                        fontWeight: FontWeight.w900,
+                        letterSpacing: 1,
+                      ),
+                    ),
 
-const SizedBox(height: 12),
+                    const SizedBox(height: 12),
 
-FormField<bool>(
-validator: (value) {
-if (!_acceptedDeclaration) {
-return 'Please confirm the declaration';
-}
-return null;
-},
-builder: (field) {
-return Column(
-crossAxisAlignment: CrossAxisAlignment.start,
-children: [
-CheckboxListTile(
-contentPadding: EdgeInsets.zero,
-controlAffinity: ListTileControlAffinity.leading,
-value: _acceptedDeclaration,
-title: const Text(
-'I confirm that the information provided is correct.',
-),
-onChanged: (value) {
-setState(() {
-_acceptedDeclaration = value ?? false;
-});
-field.didChange(_acceptedDeclaration);
-},
-),
-if (field.hasError)
-Padding(
-padding: const EdgeInsets.only(left: 12),
-child: Text(
-field.errorText!,
-style: TextStyle(
-color: Theme.of(context).colorScheme.error,
-fontSize: 12,
-),
-),
-),
-],
-);
-},
-),
+                    FormField<bool>(
+                      validator: (value) {
+                        if (!_acceptedDeclaration) {
+                          return 'Please confirm the declaration';
+                        }
+                        return null;
+                      },
+                      builder: (field) {
+                        return Column(
+                          crossAxisAlignment: CrossAxisAlignment.start,
+                          children: [
+                            CheckboxListTile(
+                              contentPadding: EdgeInsets.zero,
+                              controlAffinity: ListTileControlAffinity.leading,
+                              value: _acceptedDeclaration,
+                              title: const Text(
+                                'I confirm that the information provided is correct.',
+                              ),
+                              onChanged: (value) {
+                                setState(() {
+                                  _acceptedDeclaration = value ?? false;
+                                });
+                                field.didChange(_acceptedDeclaration);
+                              },
+                            ),
+                            if (field.hasError)
+                              Padding(
+                                padding: const EdgeInsets.only(left: 12),
+                                child: Text(
+                                  field.errorText!,
+                                  style: TextStyle(
+                                    color: Theme.of(context).colorScheme.error,
+                                    fontSize: 12,
+                                  ),
+                                ),
+                              ),
+                          ],
+                        );
+                      },
+                    ),
 
-const SizedBox(height: 25),
+                    const SizedBox(height: 25),
 
-Row(
-children: [
-Expanded(
-child: ElevatedButton.icon(
-onPressed: _submitForm,
-icon: const Icon(Icons.send_outlined),
-label: const Text('SUBMIT REQUEST'),
-style: ElevatedButton.styleFrom(
-backgroundColor: iituRed,
-foregroundColor: Colors.white,
-padding: const EdgeInsets.symmetric(vertical: 18),
-),
-),
-),
+                    Row(
+                      children: [
+                        Expanded(
+                          child: ElevatedButton.icon(
+                            onPressed: _submitForm,
+                            icon: const Icon(Icons.send_outlined),
+                            label: const Text('SUBMIT REQUEST'),
+                            style: ElevatedButton.styleFrom(
+                              backgroundColor: iituRed,
+                              foregroundColor: Colors.white,
+                              padding: const EdgeInsets.symmetric(vertical: 18),
+                            ),
+                          ),
+                        ),
 
-const SizedBox(width: 12),
+                        const SizedBox(width: 12),
 
-Expanded(
-child: OutlinedButton.icon(
-onPressed: _resetForm,
-icon: const Icon(Icons.refresh),
-label: const Text('RESET'),
-style: OutlinedButton.styleFrom(
-padding: const EdgeInsets.symmetric(vertical: 18),
-),
-),
-),
-],
-),
+                        Expanded(
+                          child: OutlinedButton.icon(
+                            onPressed: _resetForm,
+                            icon: const Icon(Icons.refresh),
+                            label: const Text('RESET'),
+                            style: OutlinedButton.styleFrom(
+                              padding: const EdgeInsets.symmetric(vertical: 18),
+                            ),
+                          ),
+                        ),
+                      ],
+                    ),
 
-const SizedBox(height: 15),
+                    const SizedBox(height: 15),
 
-SizedBox(
-width: double.infinity,
-child: OutlinedButton.icon(
-onPressed: _lastRequestId == null ? null : _viewSavedRequest,
-icon: const Icon(Icons.cloud_download_outlined),
-label: const Text('VIEW SAVED REQUEST'),
-style: OutlinedButton.styleFrom(
-foregroundColor: iituRed,
-padding: const EdgeInsets.symmetric(vertical: 18),
-),
-),
-),
-const SizedBox(height: 15),
-SizedBox(
-width: double.infinity,
-child: ElevatedButton.icon(
-onPressed: () {
-Navigator.push(
-context,
-MaterialPageRoute(
-builder: (context) => const MyRequestsPage(),
-),
-);
-},
-icon: const Icon(Icons.history),
-label: const Text('MY REQUESTS'),
-style: ElevatedButton.styleFrom(
-backgroundColor: iituRed,
-foregroundColor: Colors.white,
-padding: const EdgeInsets.symmetric(vertical: 18),
-),
-),
-),
-const SizedBox(height: 50),
-],
-),
-),
-),
-),
-),
-),
-);
-}
+                    SizedBox(
+                      width: double.infinity,
+                      child: OutlinedButton.icon(
+                        onPressed: _lastRequestId == null ? null : _viewSavedRequest,
+                        icon: const Icon(Icons.cloud_download_outlined),
+                        label: const Text('VIEW SAVED REQUEST'),
+                        style: OutlinedButton.styleFrom(
+                          foregroundColor: iituRed,
+                          padding: const EdgeInsets.symmetric(vertical: 18),
+                        ),
+                      ),
+                    ),
+                    const SizedBox(height: 15),
+                    SizedBox(
+                      width: double.infinity,
+                      child: ElevatedButton.icon(
+                        onPressed: () {
+                          Navigator.push(
+                            context,
+                            MaterialPageRoute(
+                              builder: (context) => const MyRequestsPage(),
+                            ),
+                          );
+                        },
+                        icon: const Icon(Icons.history),
+                        label: const Text('MY REQUESTS'),
+                        style: ElevatedButton.styleFrom(
+                          backgroundColor: iituRed,
+                          foregroundColor: Colors.white,
+                          padding: const EdgeInsets.symmetric(vertical: 18),
+                        ),
+                      ),
+                    ),
+                    const SizedBox(height: 50),
+                  ],
+                ),
+              ),
+            ),
+          ),
+        ),
+      ),
+    );
+  }
 
-Future<void> _submitForm() async {
-if (!_formKey.currentState!.validate()) return;
+  Future<void> _submitForm() async {
+    if (!_formKey.currentState!.validate()) return;
 
-_formKey.currentState!.save();
+    _formKey.currentState!.save();
 
-try {
+    try {
 // Sign in anonymously if the user is not signed in.
-User? user = FirebaseAuth.instance.currentUser;
+      User? user = FirebaseAuth.instance.currentUser;
 
-if (user == null) {
-final credential =
-await FirebaseAuth.instance.signInAnonymously();
-user = credential.user;
-}
+      if (user == null) {
+        final credential =
+        await FirebaseAuth.instance.signInAnonymously();
+        user = credential.user;
+      }
 
-if (user == null) {
-throw Exception('Could not authenticate the user.');
-}
+      if (user == null) {
+        throw Exception('Could not authenticate the user.');
+      }
 
 // Save the student request to Firestore.
-final document = await FirebaseFirestore.instance
-    .collection('campusRequests')
-    .add({
-'studentName': _nameController.text.trim(),
-'studentId': _idController.text.trim(),
-'email': _emailController.text.trim(),
-'phone': _phoneController.text.trim(),
-'description': _detailsController.text.trim(),
-'serviceCategory': _selectedCategory,
-'subject': _subjectController.text.trim(),
-'urgency': _selectedUrgency,
-'preferredContact': _preferredContact,
-'preferredDate': _preferredDate == null
-? null
-    : Timestamp.fromDate(_preferredDate!),
-'ownerUid': user.uid,
-'status': 'Submitted',
-'createdAt': FieldValue.serverTimestamp(),
-});
+      final document = await FirebaseFirestore.instance
+          .collection('campusRequests')
+          .add({
+        'studentName': _nameController.text.trim(),
+        'studentId': _idController.text.trim(),
+        'email': _emailController.text.trim(),
+        'phone': _phoneController.text.trim(),
+        'description': _detailsController.text.trim(),
+        'serviceCategory': _selectedCategory,
+        'subject': _subjectController.text.trim(),
+        'urgency': _selectedUrgency,
+        'preferredContact': _preferredContact,
+        'preferredDate': _preferredDate == null
+            ? null
+            : Timestamp.fromDate(_preferredDate!),
+        'ownerUid': user.uid,
+        'status': 'Submitted',
+        'createdAt': FieldValue.serverTimestamp(),
+      });
 
-if (!mounted) return;
-setState(() {
-_lastRequestId = document.id;
-});
-final prefs = await SharedPreferences.getInstance();
-await prefs.setString('lastRequestId', document.id);
+      if (!mounted) return;
+      setState(() {
+        _lastRequestId = document.id;
+      });
+      final prefs = await SharedPreferences.getInstance();
+      await prefs.setString('lastRequestId', document.id);
 
 // Show confirmation after saving.
-showDialog(
-context: context,
-builder: (context) {
-return AlertDialog(
-title: const Row(
-children: [
-Icon(Icons.check_circle, color: iituRed),
-SizedBox(width: 10),
-Text('Request Submitted'),
-],
-),
-content: SingleChildScrollView(
-child: Column(
-mainAxisSize: MainAxisSize.min,
-crossAxisAlignment: CrossAxisAlignment.start,
-children: [
-const Text(
-'Your campus service request has been saved successfully.',
-),
-const SizedBox(height: 20),
-Text('Request ID: ${document.id}'),
-const SizedBox(height: 10),
-Text('Student: ${_nameController.text}'),
-Text('Student ID: ${_idController.text}'),
-Text('Service: $_selectedCategory'),
-Text('Subject: ${_subjectController.text}'),
-Text('Urgency: $_selectedUrgency'),
-Text('Contact: $_preferredContact'),
-if (_preferredDate != null)
-Text(
-'Date: ${_preferredDate!.day.toString().padLeft(2, '0')}/'
-'${_preferredDate!.month.toString().padLeft(2, '0')}/'
-'${_preferredDate!.year}',
-),
-],
-),
-),
-actions: [
-TextButton(
-onPressed: () {
-Navigator.pop(context);
+      showDialog(
+        context: context,
+        builder: (context) {
+          return AlertDialog(
+            title: const Row(
+              children: [
+                Icon(Icons.check_circle, color: iituRed),
+                SizedBox(width: 10),
+                Text('Request Submitted'),
+              ],
+            ),
+            content: SingleChildScrollView(
+              child: Column(
+                mainAxisSize: MainAxisSize.min,
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: [
+                  const Text(
+                    'Your campus service request has been saved successfully.',
+                  ),
+                  const SizedBox(height: 20),
+                  Text('Request ID: ${document.id}'),
+                  const SizedBox(height: 10),
+                  Text('Student: ${_nameController.text}'),
+                  Text('Student ID: ${_idController.text}'),
+                  Text('Service: $_selectedCategory'),
+                  Text('Subject: ${_subjectController.text}'),
+                  Text('Urgency: $_selectedUrgency'),
+                  Text('Contact: $_preferredContact'),
+                  if (_preferredDate != null)
+                    Text(
+                      'Date: ${_preferredDate!.day.toString().padLeft(2, '0')}/'
+                          '${_preferredDate!.month.toString().padLeft(2, '0')}/'
+                          '${_preferredDate!.year}',
+                    ),
+                ],
+              ),
+            ),
+            actions: [
+              TextButton(
+                onPressed: () {
+                  Navigator.pop(context);
 
-Navigator.push(
-context,
-MaterialPageRoute(
-builder: (context) => RequestDetailsPage(
-requestId: document.id,
-),
-),
-);
-},
-child: const Text('VIEW REQUEST DETAILS'),
-),
-],
-);
-},
-);
-} catch (e) {
-if (!mounted) return;
+                  Navigator.push(
+                    context,
+                    MaterialPageRoute(
+                      builder: (context) => RequestDetailsPage(
+                        requestId: document.id,
+                      ),
+                    ),
+                  );
+                },
+                child: const Text('VIEW REQUEST DETAILS'),
+              ),
+            ],
+          );
+        },
+      );
+    } catch (e) {
+      if (!mounted) return;
 
-ScaffoldMessenger.of(context).showSnackBar(
-SnackBar(
-content: Text('Failed to submit request: $e'),
-),
-);
-}
-}
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(
+          content: Text('Failed to submit request: $e'),
+        ),
+      );
+    }
+  }
 
-Future<void> _viewSavedRequest() async {
-if (_lastRequestId == null) {
-ScaffoldMessenger.of(context).showSnackBar(
-const SnackBar(
-content: Text('Please submit a request first.'),
-),
-);
-return;
-}
+  Future<void> _viewSavedRequest() async {
+    if (_lastRequestId == null) {
+      ScaffoldMessenger.of(context).showSnackBar(
+        const SnackBar(
+          content: Text('Please submit a request first.'),
+        ),
+      );
+      return;
+    }
 
-try {
-final document = await FirebaseFirestore.instance
-    .collection('campusRequests')
-    .doc(_lastRequestId)
-    .get(const GetOptions(source: Source.server));
+    try {
+      final document = await FirebaseFirestore.instance
+          .collection('campusRequests')
+          .doc(_lastRequestId)
+          .get(const GetOptions(source: Source.server));
 
-if (!mounted) return;
+      if (!mounted) return;
 
-if (!document.exists) {
-ScaffoldMessenger.of(context).showSnackBar(
-const SnackBar(
-content: Text('Request not found.'),
-),
-);
-return;
-}
+      if (!document.exists) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          const SnackBar(
+            content: Text('Request not found.'),
+          ),
+        );
+        return;
+      }
 
-final data = document.data()!;
+      final data = document.data()!;
 
-showDialog(
-context: context,
-builder: (context) => AlertDialog(
-title: const Text('Saved Request from Firebase'),
-content: SingleChildScrollView(
-child: Column(
-mainAxisSize: MainAxisSize.min,
-crossAxisAlignment: CrossAxisAlignment.start,
-children: [
-Text('Request ID: ${document.id}'),
-const SizedBox(height: 12),
-Text('Student: ${data['studentName']}'),
-Text('Student ID: ${data['studentId']}'),
-Text('Service: ${data['serviceCategory']}'),
-Text('Subject: ${data['subject']}'),
-Text('Urgency: ${data['urgency']}'),
-Text('Contact: ${data['preferredContact']}'),
-Text('Status: ${data['status']}'),
-],
-),
-),
-actions: [
-TextButton(
-onPressed: () => Navigator.pop(context),
-child: const Text('OK'),
-),
-],
-),
-);
-} catch (e) {
-if (!mounted) return;
+      showDialog(
+        context: context,
+        builder: (context) => AlertDialog(
+          title: const Text('Saved Request from Firebase'),
+          content: SingleChildScrollView(
+            child: Column(
+              mainAxisSize: MainAxisSize.min,
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                Text('Request ID: ${document.id}'),
+                const SizedBox(height: 12),
+                Text('Student: ${data['studentName']}'),
+                Text('Student ID: ${data['studentId']}'),
+                Text('Service: ${data['serviceCategory']}'),
+                Text('Subject: ${data['subject']}'),
+                Text('Urgency: ${data['urgency']}'),
+                Text('Contact: ${data['preferredContact']}'),
+                Text('Status: ${data['status']}'),
+              ],
+            ),
+          ),
+          actions: [
+            TextButton(
+              onPressed: () => Navigator.pop(context),
+              child: const Text('OK'),
+            ),
+          ],
+        ),
+      );
+    } catch (e) {
+      if (!mounted) return;
 
-ScaffoldMessenger.of(context).showSnackBar(
-SnackBar(
-content: Text('Failed to load request: $e'),
-),
-);
-}
-}
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(
+          content: Text('Failed to load request: $e'),
+        ),
+      );
+    }
+  }
 
-void _resetForm() {
-_formKey.currentState?.reset();
+  void _resetForm() {
+    _formKey.currentState?.reset();
 
-_nameController.clear();
-_idController.clear();
-_emailController.clear();
-_phoneController.clear();
-_subjectController.clear();
-_detailsController.clear();
+    _nameController.clear();
+    _idController.clear();
+    _emailController.clear();
+    _phoneController.clear();
+    _subjectController.clear();
+    _detailsController.clear();
 
-setState(() {
-_selectedCategory = null;
-_selectedUrgency = null;
-_preferredContact = null;
-_preferredDate = null;
-_acceptedDeclaration = false;
-});
+    setState(() {
+      _selectedCategory = null;
+      _selectedUrgency = null;
+      _preferredContact = null;
+      _preferredDate = null;
+      _acceptedDeclaration = false;
+    });
 
-ScaffoldMessenger.of(context).showSnackBar(
-const SnackBar(
-content: Text('Form has been reset'),
-),
-);
-}
-@override
-void dispose() {
-_nameController.dispose();
-_idController.dispose();
-_emailController.dispose();
-_phoneController.dispose();
-_subjectController.dispose();
-_detailsController.dispose();
-super.dispose();
-}
+    ScaffoldMessenger.of(context).showSnackBar(
+      const SnackBar(
+        content: Text('Form has been reset'),
+      ),
+    );
+  }
+  @override
+  void dispose() {
+    _nameController.dispose();
+    _idController.dispose();
+    _emailController.dispose();
+    _phoneController.dispose();
+    _subjectController.dispose();
+    _detailsController.dispose();
+    super.dispose();
+  }
 }
